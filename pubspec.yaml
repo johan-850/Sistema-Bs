@@ -1,0 +1,81 @@
+name: sistema_bs
+description: "Sistema Bs — Sistema de Administración y Punto de Venta Web para Escritorio"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── UI / Design ─────────────────────────────────────────────────────────
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+
+  # ── State Management ────────────────────────────────────────────────────
+  flutter_riverpod: ^2.6.1
+
+  # ── Supabase ────────────────────────────────────────────────────────────
+  supabase_flutter: ^2.8.4
+
+  # ── Navigation ──────────────────────────────────────────────────────────
+  go_router: ^14.6.3
+
+  # ── Preferencias locales (por dispositivo) ──────────────────────────────
+  shared_preferences: ^2.3.3
+
+  # ── Barcode ──────────────────────────────────────────────────────────────
+  # mobile_scanner/permission_handler quedan hasta EPB-10 (pistola HID),
+  # que reemplaza el escaneo por cámara — ver README.
+  mobile_scanner: ^5.2.3
+  permission_handler: ^11.3.1
+
+  # ── PDF & Printing ───────────────────────────────────────────────────────
+  pdf: ^3.11.1
+  printing: ^5.13.2
+
+  # ── Charts & Analytics ──────────────────────────────────────────────────
+  fl_chart: ^0.69.0
+
+  # ── Image Handling ──────────────────────────────────────────────────────
+  image_picker: ^1.1.2
+
+  # ── CSV / Excel Export ───────────────────────────────────────────────────
+  csv: ^6.0.0
+  share_plus: ^10.1.4
+  file_picker: ^8.1.7
+
+  # ── Utilities ───────────────────────────────────────────────────────────
+  intl: ^0.20.1
+  equatable: ^2.0.7
+  uuid: ^4.5.1
+  flutter_dotenv: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # - assets/images/
+    # - assets/icons/
+    # - assets/lottie/
+    # - assets/fonts/
+    - .env
+
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
