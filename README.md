@@ -26,9 +26,9 @@
 
 ### Estado actual
 
-**Proyecto en planificación.** El repositorio contiene por ahora la documentación de arranque: este README y el [product backlog](BACKLOG.md) con las 10 épicas, 37 historias de usuario y 206 story points estimados. **Todavía no hay código implementado.**
+**Sprint 1 (SB-01 / EPB-01) completo: backend independiente y reproducible.** El repositorio tiene las 10 migraciones SQL necesarias para levantar el esquema completo en un proyecto Supabase nuevo (incluida `002_base_schema.sql`, que reconstruye lo que en Sistema AS se creó a mano), las tres Edge Functions, el runbook de despliegue y el script de bootstrap del AdminMaster inicial. **Todavía no hay código Flutter en este repositorio** — ese es el sprint 2 (EPB-02).
 
-El desarrollo parte del código de [Sistema AS](https://github.com/johan-850/SIstema_AS) (Abarrotería Pro), la versión móvil de esta misma solución, donde ya están construidas y funcionando contra Supabase real diez épicas de lógica de negocio. El primer sprint (SB-01) es de backend: levantar una base de datos propia y reproducible.
+El desarrollo parte del código de [Sistema AS](https://github.com/johan-850/SIstema_AS) (Abarrotería Pro), la versión móvil de esta misma solución, donde ya están construidas y funcionando contra Supabase real diez épicas de lógica de negocio.
 
 ### Roles del Sistema
 
@@ -220,32 +220,32 @@ El resultado queda en `build/web/`, listo para publicarse en cualquier hospedaje
 
 ## Migraciones SQL — Supabase
 
-Los scripts se ejecutan **en orden** desde el **SQL Editor** del proyecto Supabase. No hay CLI de Supabase configurada en este repositorio, así que se aplican manualmente.
+Los scripts se ejecutan **en orden** desde el **SQL Editor** del proyecto Supabase. No hay CLI de Supabase configurada para las migraciones, así que se aplican manualmente. Guía completa con checklist de verificación en [`supabase/RUNBOOK.md`](supabase/RUNBOOK.md).
 
 | Migración | Contenido |
 |-----------|-----------|
-| `000_base_schema.sql` | Tipo `register_status`, tablas `products` y `cash_registers`, índices y RLS |
 | `001_auth_users.sql` | `profiles`, `user_activity_logs`, triggers de alta y último acceso, RLS por rol |
-| `002_product_images_storage.sql` | Bucket `product-images` y sus políticas |
-| `003_inventory.sql` | `stock_movements`, `restock_requests`, función `adjust_product_stock`, Realtime sobre `products` |
-| `004_sales.sql` | `sales`, `sale_items`, función atómica `confirm_sale` |
-| `005_cancellations_and_alerts.sql` | `sale_cancellations`, `low_stock_alerts` |
-| `006_store_settings.sql` | `store_settings`, buckets `store-assets` y `receipt-photos` |
-| `007_expenses.sql` | `expense_categories`, `expenses`, columnas de configuración de gastos |
-| `008_closing.sql` | Funciones `start_register_closing` y `close_register`, columnas de cuadre |
-| `009_weekly_report.sql` | Configuración del reporte semanal por correo (opcional) |
+| `002_base_schema.sql` | Tipo `register_status`, tablas `products` y `cash_registers`, índices y RLS |
+| `003_product_images_storage.sql` | Bucket `product-images` y sus políticas |
+| `004_inventory.sql` | `stock_movements`, `restock_requests`, función `adjust_product_stock`, Realtime sobre `products` |
+| `005_sales.sql` | `sales`, `sale_items`, función atómica `confirm_sale` |
+| `006_cancellations_and_alerts.sql` | `sale_cancellations`, `low_stock_alerts` |
+| `007_qr_and_receipt_photo.sql` | `store_settings`, buckets `store-assets` y `receipt-photos` |
+| `008_expenses.sql` | `expense_categories`, `expenses`, columnas de configuración de gastos |
+| `009_closing.sql` | Agrega `'closing'` al enum, funciones `start_register_closing` y `close_register` |
+| `010_weekly_report.sql` | Configuración del reporte semanal por correo (opcional) |
 
-### Sobre la migración `000`
+### Sobre la migración `002`
 
-Sistema AS creó las tablas `products` y `cash_registers` a mano desde el Dashboard, así que sus migraciones **no reconstruyen la base de datos completa**. La migración `000` de este proyecto existe precisamente para cerrar ese hueco y garantizar que el esquema se levante entero desde cero. Es la primera historia del backlog ([USB-001](BACKLOG.md#epb-01--fundación-esquema-completo-e-independiente)).
+Sistema AS creó las tablas `products` y `cash_registers` a mano desde el Dashboard, así que sus migraciones **no reconstruyen la base de datos completa**. La migración `002` de este proyecto existe precisamente para cerrar ese hueco y garantizar que el esquema se levante entero desde cero — va después de `001` porque sus columnas `created_by`/`cashier_id` referencian `profiles`. Es la primera historia del backlog ([USB-001](BACKLOG.md#epb-01--fundación-esquema-completo-e-independiente)).
 
 ### Usuario administrador inicial
 
-El primer AdminMaster se crea mediante el procedimiento documentado en la historia USB-003, no manualmente desde el Dashboard.
+El primer AdminMaster se crea mediante el procedimiento en [`supabase/bootstrap_admin.sql`](supabase/bootstrap_admin.sql) (historia USB-003), no a mano desde el Dashboard.
 
 ### Edge Functions
 
-Se despliegan aparte con la CLI de Supabase:
+El código ya vive en `supabase/functions/` (`create-cashier`, `toggle-cashier-status`, `send-weekly-report`), copiado de Sistema AS sin cambios — son genéricas, sin ninguna dependencia de la plataforma. Se despliegan con la CLI de Supabase:
 
 ```bash
 supabase functions deploy create-cashier
@@ -253,7 +253,7 @@ supabase functions deploy toggle-cashier-status
 supabase functions deploy send-weekly-report
 ```
 
-El reporte semanal es opcional: requiere un proveedor de correo transaccional y las extensiones `pg_cron` y `pg_net` habilitadas.
+El reporte semanal es opcional: requiere un proveedor de correo transaccional y las extensiones `pg_cron` y `pg_net` habilitadas. Detalle de secretos necesarios en el runbook.
 
 ---
 
