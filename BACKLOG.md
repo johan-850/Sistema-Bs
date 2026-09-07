@@ -1,14 +1,27 @@
 # Product Backlog — Sistema Bs
 
-**Versión 1.0** · Sistema de Administración y Punto de Venta web para escritorio, operado con pistola lectora de códigos de barras.
+**Versión 1.1** · Sistema de Administración y Punto de Venta web para escritorio, operado con pistola lectora de códigos de barras.
 
 | | |
 |---|---|
 | **Épicas** | 10 (EPB-01 → EPB-10) |
-| **Historias de usuario** | 37 (USB-001 → USB-037) |
-| **Story Points** | 206 |
-| **Sprints estimados** | 8 (2 semanas cada uno) |
+| **Historias de usuario** | 38 (USB-001 → USB-038) |
+| **Story Points** | 209 |
+| **Sprints estimados** | 9 (2 semanas cada uno) |
+| **Completado** | 34 SP (SB-01, SB-02) |
 | **Roles** | AdminMaster (AM), Cajero (CAJ) |
+
+Los planes de implementación de cada sprint están en [docs/ROADMAP.md](docs/ROADMAP.md).
+
+### Cambios de la v1.0 a la v1.1
+
+Todos surgieron de explorar el código heredado al planear los sprints, y quedan registrados para no perder el rastro:
+
+- **`USB-038` (guard de rol por ruta, 3 SP)** — historia nueva en EPB-03. El router solo valida autenticación, no rol por ruta: un cajero puede navegar a `/admin/*` escribiéndolo en la barra de direcciones. En móvil no había barra de direcciones; en web sí.
+- **`USB-010` y `USB-011` pasaron de SB-02 a SB-03.** SB-02 entregó 13 de sus 29 SP.
+- **EPB-08 (impresión) se movió a SB-06** y está sobreestimada: el formato de tiquete de 58 mm y la impresión por navegador ya existen en el código heredado.
+- **`USB-028` es más ancha de lo redactado**: la exportación afecta 11 puntos en 6 features, no solo reportes.
+- **La paginación no está en ninguna historia** aunque hace falta en productos, inventario e historial de ventas. Se absorbe en `USB-018`, `USB-020` y `USB-025`, donde es prerrequisito de "ver el catálogo de un vistazo".
 
 ---
 
@@ -86,8 +99,11 @@ El código heredado navega con menú lateral desplegable en el panel de administ
 | USB-011 | Como usuario quiero un menú lateral siempre visible para navegar sin abrir y cerrar paneles. | Barra de navegación lateral permanente en ancho de escritorio, con las mismas secciones del menú actual y respetando los permisos por rol. Se colapsa a menú desplegable en ventanas angostas. Marca la sección activa. | Alta | 8 | AM/CAJ |
 | USB-012 | Como usuario quiero que los formularios se abran como ventanas centradas y no como paneles desde abajo. | Las 14 hojas emergentes se muestran como diálogo centrado en escritorio, conservando el comportamiento actual en ventanas angostas. Se cierran con Escape. El foco entra al primer campo. | Alta | 8 | AM/CAJ |
 | USB-013 | Como usuario quiero una interfaz con densidad de escritorio para ver más información sin desplazarme. | Espaciados, tipografía y alturas de fila ajustados para mouse. Estados de hover en filas y botones. Cursor correcto en elementos interactivos. Las cuadrículas de tarjetas usan el ancho en lugar de fijar dos columnas. | Media | 5 | AM/CAJ |
+| USB-038 | Como AdminMaster quiero que un cajero no pueda entrar a las pantallas de administración escribiendo la dirección a mano. | El router valida el rol en cada ruta bajo `/admin`, no solo al iniciar sesión. Un cajero que navegue a mano termina en su propia pantalla, no en una vista vacía ni en un error. Las políticas RLS siguen siendo la defensa de fondo. | Alta | 3 | AM |
 
-**Total: 29 SP**
+**Total: 32 SP**
+
+> `USB-038` se agregó en la v1.1. El router heredado de la versión móvil solo valida autenticación, porque en un celular no hay barra de direcciones donde escribir una ruta. En web sí la hay.
 
 ---
 
@@ -198,18 +214,23 @@ La pistola se conecta por USB o se empareja desde el sistema operativo y se comp
 
 Sprints de dos semanas. La pistola queda al final, como se definió.
 
-| Sprint | Foco | Historias | SP | Épica(s) |
-|---|---|---|---|---|
-| SB-01 | Backend independiente y reproducible | USB-001 → USB-005 | 21 | EPB-01 |
-| SB-02 | Base web + navegación de escritorio | USB-006 → USB-011 | 29 | EPB-02 / EPB-03 |
-| SB-03 | Shell completo + caja y gastos | USB-012, USB-013, USB-022 → USB-024 | 28 | EPB-03 / EPB-06 |
-| SB-04 | Punto de venta de escritorio | USB-014 → USB-017 | 31 | EPB-04 |
-| SB-05 | Productos e inventario | USB-018 → USB-021 | 24 | EPB-05 |
-| SB-06 | Reportes y estadísticas | USB-025 → USB-028 | 26 | EPB-07 |
-| SB-07 | Impresión y publicación | USB-029 → USB-033 | 26 | EPB-08 / EPB-09 |
-| SB-08 | Pistola lectora | USB-034 → USB-037 | 21 | EPB-10 |
+Plan de implementación de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 
-**Total: 206 SP en 8 sprints (~16 semanas)**
+| Sprint | Foco | Historias | SP | Épica(s) | Estado |
+|---|---|---|---|---|---|
+| SB-01 | Backend independiente y reproducible | USB-001 → USB-005 | 21 | EPB-01 | Completo |
+| SB-02 | Base del proyecto web | USB-006 → USB-009 | 13 | EPB-02 | Completo |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio | USB-010 → USB-013, USB-038 | 32 | EPB-03 | Planeado |
+| [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | USB-014 → USB-017 | 31 | EPB-04 | Planeado |
+| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021 | 24 | EPB-05 | Planeado |
+| [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | USB-022 → USB-024, USB-029, USB-030 | 28 | EPB-06 / EPB-08 | Planeado |
+| [SB-07](docs/sprints/SB-07.md) | Reportes y estadísticas | USB-025 → USB-028 | 26 | EPB-07 | Planeado |
+| [SB-08](docs/sprints/SB-08.md) | Despliegue | USB-031 → USB-033 | 13 | EPB-09 | Planeado |
+| [SB-09](docs/sprints/SB-09.md) | Pistola lectora | USB-034 → USB-037 | 21 | EPB-10 | Planeado |
+
+**Total: 209 SP en 9 sprints (~18 semanas).** Completado 34 SP; pendiente 175 SP.
+
+La v1.0 estimaba 8 sprints. Son 9 porque SB-02 entregó 13 de sus 29 SP: `USB-010` y `USB-011` arrastraron a SB-03. El motivo y el detalle están en [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

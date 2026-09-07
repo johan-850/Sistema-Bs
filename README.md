@@ -26,7 +26,12 @@
 
 ### Estado actual
 
-**Sprint 1 (SB-01 / EPB-01) completo: backend independiente y reproducible.** El repositorio tiene las 10 migraciones SQL necesarias para levantar el esquema completo en un proyecto Supabase nuevo (incluida `002_base_schema.sql`, que reconstruye lo que en Sistema AS se creó a mano), las tres Edge Functions, el runbook de despliegue y el script de bootstrap del AdminMaster inicial. **Todavía no hay código Flutter en este repositorio** — ese es el sprint 2 (EPB-02).
+**Sprints 1 y 2 completos (34 de 209 SP).**
+
+- **SB-01 — Backend**: las 10 migraciones SQL que levantan el esquema completo en un proyecto Supabase nuevo (incluida `002_base_schema.sql`, que reconstruye lo que en Sistema AS se creó a mano desde el Dashboard), las tres Edge Functions, el runbook de despliegue y el script de bootstrap del AdminMaster.
+- **SB-02 — Base web**: el código Flutter portado desde Sistema AS (106 archivos), compilando y arrancando en navegador, con la identidad renombrada y 32 dependencias sin uso podadas del `pubspec.yaml`.
+
+**La interfaz todavía es la de móvil.** La adaptación a escritorio (barra lateral, tablas densas, operación por teclado) empieza en SB-03. El plan de cada sprint restante está en [docs/ROADMAP.md](docs/ROADMAP.md).
 
 El desarrollo parte del código de [Sistema AS](https://github.com/johan-850/SIstema_AS) (Abarrotería Pro), la versión móvil de esta misma solución, donde ya están construidas y funcionando contra Supabase real diez épicas de lógica de negocio.
 
@@ -144,19 +149,19 @@ store_settings     -- Configuración del negocio (fila única)
 
 Detalle completo en [BACKLOG.md](BACKLOG.md).
 
-| # | Épica | US | SP | Sprint |
-|---|-------|----|----|--------|
-| EPB-01 | Fundación: esquema completo e independiente | 5 | 21 | SB-01 |
-| EPB-02 | Base del proyecto web | 4 | 13 | SB-02 |
-| EPB-03 | Shell responsive de escritorio | 4 | 29 | SB-02 / SB-03 |
-| EPB-04 | POS de escritorio | 4 | 31 | SB-04 |
-| EPB-05 | Productos e inventario en escritorio | 4 | 24 | SB-05 |
-| EPB-06 | Caja y gastos en escritorio | 3 | 15 | SB-03 |
-| EPB-07 | Reportes y estadísticas en pantalla grande | 4 | 26 | SB-06 |
-| EPB-08 | Impresión de recibos | 2 | 13 | SB-07 |
-| EPB-09 | Despliegue y operación | 3 | 13 | SB-07 |
-| EPB-10 | Pistola lectora HID | 4 | 21 | SB-08 |
-| **Total** | | **37** | **206** | **8 Sprints** |
+| # | Épica | US | SP | Sprint | Estado |
+|---|-------|----|----|--------|--------|
+| EPB-01 | Fundación: esquema completo e independiente | 5 | 21 | SB-01 | Completo |
+| EPB-02 | Base del proyecto web | 4 | 13 | SB-02 | Completo |
+| EPB-03 | Shell responsive de escritorio | 5 | 32 | SB-03 | Planeado |
+| EPB-04 | POS de escritorio | 4 | 31 | SB-04 | Planeado |
+| EPB-05 | Productos e inventario en escritorio | 4 | 24 | SB-05 | Planeado |
+| EPB-06 | Caja y gastos en escritorio | 3 | 15 | SB-06 | Planeado |
+| EPB-07 | Reportes y estadísticas en pantalla grande | 4 | 26 | SB-07 | Planeado |
+| EPB-08 | Impresión de recibos | 2 | 13 | SB-06 | Planeado |
+| EPB-09 | Despliegue y operación | 3 | 13 | SB-08 | Planeado |
+| EPB-10 | Pistola lectora HID | 4 | 21 | SB-09 | Planeado |
+| **Total** | | **38** | **209** | **9 Sprints** | |
 
 ---
 
@@ -280,16 +285,19 @@ Es la última épica del backlog ([EPB-10](BACKLOG.md#epb-10--pistola-lectora-hi
 
 ## Roadmap de Sprints
 
-| Sprint | Foco | SP |
-|--------|------|----|
-| SB-01 | Backend independiente y reproducible | 21 |
-| SB-02 | Base web y navegación de escritorio | 29 |
-| SB-03 | Shell completo, caja y gastos | 28 |
-| SB-04 | Punto de venta de escritorio | 31 |
-| SB-05 | Productos e inventario | 24 |
-| SB-06 | Reportes y estadísticas | 26 |
-| SB-07 | Impresión y publicación | 26 |
-| SB-08 | Pistola lectora | 21 |
+Plan detallado de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
+
+| Sprint | Foco | SP | Estado |
+|--------|------|----|--------|
+| SB-01 | Backend independiente y reproducible | 21 | Completo |
+| SB-02 | Base del proyecto web | 13 | Completo |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio | 32 | Planeado |
+| [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | 31 | Planeado |
+| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | 24 | Planeado |
+| [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | 28 | Planeado |
+| [SB-07](docs/sprints/SB-07.md) | Reportes y estadísticas | 26 | Planeado |
+| [SB-08](docs/sprints/SB-08.md) | Despliegue | 13 | Planeado |
+| [SB-09](docs/sprints/SB-09.md) | Pistola lectora | 21 | Planeado |
 
 ---
 
