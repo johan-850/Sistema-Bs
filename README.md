@@ -153,15 +153,16 @@ Detalle completo en [BACKLOG.md](BACKLOG.md).
 |---|-------|----|----|--------|--------|
 | EPB-01 | Fundación: esquema completo e independiente | 5 | 21 | SB-01 | Completo |
 | EPB-02 | Base del proyecto web | 4 | 13 | SB-02 | Completo |
-| EPB-03 | Shell responsive de escritorio | 5 | 32 | SB-03 | Planeado |
+| EPB-03 | Shell responsive de escritorio | 6 | 37 | SB-03 | Planeado |
 | EPB-04 | POS de escritorio | 4 | 31 | SB-04 | Planeado |
-| EPB-05 | Productos e inventario en escritorio | 4 | 24 | SB-05 | Planeado |
+| EPB-05 | Productos e inventario en escritorio | 5 | 29 | SB-05 | Planeado |
 | EPB-06 | Caja y gastos en escritorio | 3 | 15 | SB-06 | Planeado |
 | EPB-07 | Reportes y estadísticas en pantalla grande | 4 | 26 | SB-07 | Planeado |
 | EPB-08 | Impresión de recibos | 2 | 13 | SB-06 | Planeado |
 | EPB-09 | Despliegue y operación | 3 | 13 | SB-08 | Planeado |
 | EPB-10 | Pistola lectora HID | 4 | 21 | SB-09 | Planeado |
-| **Total** | | **38** | **209** | **9 Sprints** | |
+| EPB-11 | Gestión de cajeros en escritorio | 1 | 8 | SB-08 | Planeado |
+| **Total** | | **41** | **227** | **9 Sprints** | |
 
 ---
 
@@ -291,12 +292,12 @@ Plan detallado de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 |--------|------|----|--------|
 | SB-01 | Backend independiente y reproducible | 21 | Completo |
 | SB-02 | Base del proyecto web | 13 | Completo |
-| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio | 32 | Planeado |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | 37 | Planeado |
 | [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | 31 | Planeado |
-| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | 24 | Planeado |
+| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | 29 | Planeado |
 | [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | 28 | Planeado |
 | [SB-07](docs/sprints/SB-07.md) | Reportes y estadísticas | 26 | Planeado |
-| [SB-08](docs/sprints/SB-08.md) | Despliegue | 13 | Planeado |
+| [SB-08](docs/sprints/SB-08.md) | Despliegue y gestión de cajeros | 21 | Planeado |
 | [SB-09](docs/sprints/SB-09.md) | Pistola lectora | 21 | Planeado |
 
 ---

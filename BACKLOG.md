@@ -1,17 +1,27 @@
 # Product Backlog — Sistema Bs
 
-**Versión 1.1** · Sistema de Administración y Punto de Venta web para escritorio, operado con pistola lectora de códigos de barras.
+**Versión 1.2** · Sistema de Administración y Punto de Venta web para escritorio, operado con pistola lectora de códigos de barras.
 
 | | |
 |---|---|
-| **Épicas** | 10 (EPB-01 → EPB-10) |
-| **Historias de usuario** | 38 (USB-001 → USB-038) |
-| **Story Points** | 209 |
+| **Épicas** | 11 (EPB-01 → EPB-11) |
+| **Historias de usuario** | 41 (USB-001 → USB-041) |
+| **Story Points** | 227 |
 | **Sprints estimados** | 9 (2 semanas cada uno) |
 | **Completado** | 34 SP (SB-01, SB-02) |
 | **Roles** | AdminMaster (AM), Cajero (CAJ) |
 
 Los planes de implementación de cada sprint están en [docs/ROADMAP.md](docs/ROADMAP.md).
+
+### Cambios de la v1.1 a la v1.2 (auditoría del 2026-09-19)
+
+Antes de arrancar el desarrollo se auditaron los planes contra el código real. Tres historias nuevas, +18 SP:
+
+- **`USB-039` (correcciones heredadas, 5 SP)** en EPB-03 — el port de SB-02 copió tres defectos de Sistema AS que allá ya están corregidos: el bug de zona horaria del "turno activo", la falta de restricción que permite dos cajas abiertas por cajero, y dos `confirm_sale` de distinta aridad conviviendo en la base de datos.
+- **`USB-040` (catálogo del cajero, 5 SP)** en EPB-05 — EPB-05 estaba redactada entera para el rol AdminMaster; la vista de consulta del cajero no la cubría ninguna historia.
+- **`USB-041` (gestión de cajeros, 8 SP)** en la épica nueva **EPB-11** — tres pantallas completas (`users_list_page`, `create_cashier_page`, `cashier_detail_page`) sin ninguna historia en todo el backlog.
+
+Queda **una decisión abierta**: la política de sincronización con Sistema AS, que sigue evolucionando (32 de 106 archivos compartidos ya difieren). Detalle en [docs/ROADMAP.md](docs/ROADMAP.md#auditoría-2026-09-19).
 
 ### Cambios de la v1.0 a la v1.1
 
@@ -100,10 +110,13 @@ El código heredado navega con menú lateral desplegable en el panel de administ
 | USB-012 | Como usuario quiero que los formularios se abran como ventanas centradas y no como paneles desde abajo. | Las 14 hojas emergentes se muestran como diálogo centrado en escritorio, conservando el comportamiento actual en ventanas angostas. Se cierran con Escape. El foco entra al primer campo. | Alta | 8 | AM/CAJ |
 | USB-013 | Como usuario quiero una interfaz con densidad de escritorio para ver más información sin desplazarme. | Espaciados, tipografía y alturas de fila ajustados para mouse. Estados de hover en filas y botones. Cursor correcto en elementos interactivos. Las cuadrículas de tarjetas usan el ancho en lugar de fijar dos columnas. | Media | 5 | AM/CAJ |
 | USB-038 | Como AdminMaster quiero que un cajero no pueda entrar a las pantallas de administración escribiendo la dirección a mano. | El router valida el rol en cada ruta bajo `/admin`, no solo al iniciar sesión. Un cajero que navegue a mano termina en su propia pantalla, no en una vista vacía ni en un error. Las políticas RLS siguen siendo la defensa de fondo. | Alta | 3 | AM |
+| USB-039 | Como Cajero quiero que el sistema no pierda mi turno a media tarde ni me deje abrir dos cajas, para no tener que justificar descuadres que no existen. | `getActiveRegister` deja de filtrar por fecha (la pregunta es "¿tiene una caja sin cerrar?", no "¿abrió hoy?") e incluye `closing` para retomar cierres a medias. Índice único parcial que impide dos cajas sin cerrar por cajero. Se borran las dos sobrecargas de `confirm_sale` y queda una sola. Verificado contra el Supabase real. | Alta | 5 | CAJ |
 
-**Total: 32 SP**
+**Total: 37 SP**
 
 > `USB-038` se agregó en la v1.1. El router heredado de la versión móvil solo valida autenticación, porque en un celular no hay barra de direcciones donde escribir una ruta. En web sí la hay.
+>
+> `USB-039` se agregó en la v1.2 tras auditar los planes: son defectos que el port copió de Sistema AS antes de que allá estuvieran diagnosticados. Van primero en SB-03, antes de cualquier trabajo de interfaz.
 
 ---
 
@@ -134,8 +147,11 @@ En la versión móvil el carrito vive en otra pantalla y se llega por la barra i
 | USB-019 | Como AdminMaster quiero crear y editar productos sin salir de la lista para no perder el contexto de lo que estaba revisando. | El formulario se abre como diálogo o panel lateral sobre la tabla. Al guardar, la fila se actualiza sin recargar toda la lista. Validaciones actuales conservadas. | Alta | 5 | AM |
 | USB-020 | Como AdminMaster quiero ver y ajustar el inventario en formato de tabla para gestionar el stock más rápido. | Tabla de inventario con semáforo de stock, filtro por estado de alerta y ajuste de stock desde la misma fila. Historial de movimientos accesible por producto. Actualización en tiempo real conservada. | Alta | 8 | AM |
 | USB-021 | Como AdminMaster quiero subir la foto del producto desde el explorador de archivos del computador. | Selección de archivo desde el sistema. Vista previa antes de guardar. Validación de tamaño y formato. Se elimina la dependencia de cámara y recorte del flujo de escritorio. | Media | 3 | AM |
+| USB-040 | Como Cajero quiero consultar el catálogo en pantalla grande para responder rápido cuánto cuesta un producto. | Cuadrícula o tabla según el ancho, filtros visibles y paginación, igual que el catálogo de administración. Sigue siendo de solo lectura: no gana ninguna capacidad de edición. | Media | 5 | CAJ |
 
-**Total: 24 SP**
+**Total: 29 SP**
+
+> `USB-040` se agregó en la v1.2: esta épica estaba redactada entera para el rol AdminMaster y la vista de consulta del cajero no la cubría ninguna historia, pese a ser de las más usadas en una caja.
 
 ---
 
@@ -210,6 +226,20 @@ La pistola se conecta por USB o se empareja desde el sistema operativo y se comp
 
 ---
 
+## EPB-11 — Gestión de cajeros en escritorio
+
+**Épica agregada en la v1.2.** La auditoría del 2026-09-19 encontró que tres pantallas completas no tenían ninguna historia en todo el backlog: la lista de cajeros, el alta y el detalle. El backlog original no mencionaba "usuarios" ni "cajeros" en ninguna de sus 38 historias, así que el módulo entero de administración de personal se habría quedado con forma de celular.
+
+Era además una incoherencia interna: `USB-028` migra la exportación CSV que vive dentro de `users_list_page.dart`, o sea que el plan tocaba una pantalla que ningún sprint adaptaba.
+
+| ID | Historia de Usuario | Criterios de Aceptación | Prior. | SP | Rol |
+|---|---|---|---|---|---|
+| USB-041 | Como AdminMaster quiero administrar los cajeros en pantalla grande para ver el estado del equipo de un vistazo. | Lista como tabla con estado y último acceso. Alta y edición en diálogo. Detalle aprovechando el ancho. La lógica no cambia: sigue pasando por las Edge Functions `create-cashier` y `toggle-cashier-status`. | Media | 8 | AM |
+
+**Total: 8 SP**
+
+---
+
 ## Roadmap de Sprints
 
 Sprints de dos semanas. La pistola queda al final, como se definió.
@@ -220,15 +250,15 @@ Plan de implementación de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 |---|---|---|---|---|---|
 | SB-01 | Backend independiente y reproducible | USB-001 → USB-005 | 21 | EPB-01 | Completo |
 | SB-02 | Base del proyecto web | USB-006 → USB-009 | 13 | EPB-02 | Completo |
-| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio | USB-010 → USB-013, USB-038 | 32 | EPB-03 | Planeado |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | EPB-03 | Planeado |
 | [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | USB-014 → USB-017 | 31 | EPB-04 | Planeado |
-| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021 | 24 | EPB-05 | Planeado |
+| [SB-05](docs/sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021, USB-040 | 29 | EPB-05 | Planeado |
 | [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | USB-022 → USB-024, USB-029, USB-030 | 28 | EPB-06 / EPB-08 | Planeado |
 | [SB-07](docs/sprints/SB-07.md) | Reportes y estadísticas | USB-025 → USB-028 | 26 | EPB-07 | Planeado |
-| [SB-08](docs/sprints/SB-08.md) | Despliegue | USB-031 → USB-033 | 13 | EPB-09 | Planeado |
+| [SB-08](docs/sprints/SB-08.md) | Despliegue y gestión de cajeros | USB-031 → USB-033, USB-041 | 21 | EPB-09 / EPB-11 | Planeado |
 | [SB-09](docs/sprints/SB-09.md) | Pistola lectora | USB-034 → USB-037 | 21 | EPB-10 | Planeado |
 
-**Total: 209 SP en 9 sprints (~18 semanas).** Completado 34 SP; pendiente 175 SP.
+**Total: 227 SP en 9 sprints (~18 semanas).** Completado 34 SP; pendiente 193 SP.
 
 La v1.0 estimaba 8 sprints. Son 9 porque SB-02 entregó 13 de sus 29 SP: `USB-010` y `USB-011` arrastraron a SB-03. El motivo y el detalle están en [docs/ROADMAP.md](docs/ROADMAP.md).
 

@@ -10,15 +10,17 @@ Secuencia de sprints, dependencias entre ellos y decisiones transversales. El *q
 |---|---|---|---|---|
 | SB-01 | Fundación del backend | USB-001 → USB-005 | 21 | Completo (`891449c`) |
 | SB-02 | Base del proyecto web | USB-006 → USB-009 | 13 | Completo (`49635e4`) |
-| [SB-03](sprints/SB-03.md) | Shell de escritorio | USB-010 → USB-013, USB-038 | 32 | Planeado |
+| [SB-03](sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | Planeado |
 | [SB-04](sprints/SB-04.md) | POS de escritorio | USB-014 → USB-017 | 31 | Planeado |
-| [SB-05](sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021 | 24 | Planeado |
+| [SB-05](sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021, USB-040 | 29 | Planeado |
 | [SB-06](sprints/SB-06.md) | Caja, gastos e impresión | USB-022 → USB-024, USB-029, USB-030 | 28 | Planeado |
 | [SB-07](sprints/SB-07.md) | Reportes y estadísticas | USB-025 → USB-028 | 26 | Planeado |
-| [SB-08](sprints/SB-08.md) | Despliegue | USB-031 → USB-033 | 13 | Planeado |
+| [SB-08](sprints/SB-08.md) | Despliegue y gestión de cajeros | USB-031 → USB-033, USB-041 | 21 | Planeado |
 | [SB-09](sprints/SB-09.md) | Pistola lectora HID | USB-034 → USB-037 | 21 | Planeado |
 
-**Pendiente: 175 SP en 7 sprints.** Completado: 34 SP.
+**Pendiente: 193 SP en 7 sprints.** Completado: 34 SP.
+
+> Los planes se auditaron el 2026-09-19 contra el código real. La auditoría agregó tres historias (`USB-039`, `USB-040`, `USB-041`, +18 SP) y dejó abierta una decisión sobre la relación con Sistema AS — ver [Auditoría](#auditoría-2026-09-19) al final.
 
 ---
 
@@ -120,3 +122,37 @@ Los planes de sprint no tienen todos la misma profundidad, y es deliberado:
 - **SB-08 y SB-09** están como dirección arquitectónica y decisiones pendientes.
 
 Escribir los siete con el mismo detalle sería precisión falsa. El plan de la pistola depende del layout que se construya en SB-04, y el de reportes depende del sistema de puntos de quiebre de SB-03. **Cada plan se refina al empezar su sprint**, con el código real de ese momento a la vista.
+
+---
+
+## Auditoría (2026-09-19)
+
+Antes de arrancar el desarrollo se auditaron los siete planes contra el código real. Lo que se verificó y se sostuvo: las 28 referencias `archivo:línea` citadas son exactas, la aritmética de SP cuadra, la cobertura de historias no tiene huecos ni duplicados, y los supuestos técnicos (`checkoutProvider` es `autoDispose`, `cartProvider` es global, el PDF ya genera rollo de 58 mm) se confirmaron uno por uno.
+
+Lo que **no** se sostuvo, y ya quedó corregido en los planes:
+
+| Hallazgo | Corrección |
+|---|---|
+| El bug del "turno activo" (filtro de fecha en UTC) viaja en el código portado | `USB-039` en SB-03 |
+| `002_base_schema.sql` reconstruyó `cash_registers` sin impedir dos cajas abiertas — la condición que habilita ese bug | `USB-039` en SB-03 |
+| Dos `confirm_sale` con distinta aridad conviven en la base de datos; cero `DROP FUNCTION` en el repositorio | `USB-039` en SB-03 |
+| Tres pantallas de gestión de cajeros sin ninguna historia en el backlog | `USB-041` en SB-08 |
+| El catálogo del cajero sin ninguna historia en el backlog | `USB-040` en SB-05 |
+| SB-03 justificaba mal el orden de `USB-038` (el `redirect` global es independiente del `ShellRoute`) | Justificación corregida |
+| SB-07 usaba `package:web` sin advertir que es dependencia transitiva | Advertencia agregada |
+
+### Decisión pendiente: la relación con Sistema AS
+
+**Sistema-Bs es un fork congelado de un repositorio que sigue evolucionando, y ningún plan define qué hacer con eso.** Medido el 2026-09-19, con unas dos semanas de divergencia:
+
+| | Sistema AS | Sistema Bs |
+|---|---|---|
+| Archivos `.dart` | 114 | 106 |
+| Migraciones | 13 | 10 |
+| Archivos compartidos que difieren | — | 32 de 106 |
+
+Falta en Bs la feature `alerts/` completa (US-061), los diálogos de descuentos (US-029) y cuatro migraciones. A siete sprints vista (~14 semanas) la brecha se vuelve inmanejable, y cada corrección hecha en AS se queda rota en Bs — que es exactamente lo que ya pasó con el bug del turno activo.
+
+`USB-039` corrige los tres defectos concretos porque existen en Bs **cualquiera sea la política que se adopte**. Pero la política en sí sigue sin definir. Las opciones sobre la mesa: sincronizar ahora y fijar una cadencia; traer solo correcciones y no funcionalidades; congelar AS; o reconsiderar el fork y volver a un solo código con layout responsive apuntando a dos proyectos Supabase distintos.
+
+**Hasta que se decida, los planes asumen que Bs sigue su propio camino sin sincronizar.** Si se elige otra cosa, hay que agregar el trabajo de sincronización al roadmap.
