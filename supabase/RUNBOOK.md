@@ -25,6 +25,17 @@ Pega el contenido completo de cada archivo en el SQL Editor y ejecútalo antes d
 | 8 | `migrations/008_expenses.sql` | `expense_categories`, `expenses` |
 | 9 | `migrations/009_closing.sql` | Agrega `'closing'` al enum, funciones `start_register_closing`/`close_register` |
 | 10 | `migrations/010_weekly_report.sql` | Columnas de reporte semanal en `store_settings`, `pg_cron`/`pg_net`, cron job (opcional — ver nota abajo) |
+| 11 | `migrations/011_one_open_register.sql` | Índice único: un cajero no puede tener dos cajas sin cerrar — **lee el paso 1 del archivo antes de correrlo** |
+| 12 | `migrations/012_start_closing_idempotent.sql` | `start_register_closing` idempotente, para poder retomar un cierre a medias |
+| 13 | `migrations/013_drop_duplicate_confirm_sale.sql` | Borra la sobrecarga vieja de `confirm_sale` y deja una sola |
+
+### Nota sobre las migraciones 011 a 013 (USB-039)
+
+Son las correcciones heredadas de Sistema AS que corrige el sprint SB-03. **Si ya corriste las migraciones 001 a 010 antes, estas tres van ahora**; si estás montando el proyecto desde cero, van en su orden normal.
+
+`011` es la única que no se puede correr a ciegas: el índice falla si ya existen cajas duplicadas, así que el archivo empieza con una consulta de diagnóstico y las instrucciones para resolverlas. En una base recién creada no debería haber ninguna.
+
+`012` no es opcional pese a parecer un detalle: sin ella, la app deja *entrar* a retomar un cierre a medias pero no *terminarlo*, porque la función rechaza cualquier caja que no esté en `'open'`.
 
 ### Nota sobre `010_weekly_report.sql`
 
@@ -40,6 +51,9 @@ Después de correr todo, confirma en **Table Editor**:
 - [ ] En **Storage** existen los buckets: `product-images`, `store-assets`, `receipt-photos`.
 - [ ] En **Database → Replication** (o Publications), `products` aparece en `supabase_realtime`.
 - [ ] `store_settings` tiene exactamente una fila (`id = 1`) — la inserta automáticamente `007_qr_and_receipt_photo.sql`
+- [ ] **Existe UNA sola `confirm_sale`, con 6 argumentos.** La consulta de verificación está al final de `013_drop_duplicate_confirm_sale.sql`. Si devuelve dos filas, la 013 no se corrió.
+- [ ] Existe el índice `idx_cash_registers_one_open_per_cashier` (**Database → Indexes**, o `\di` en el SQL Editor).
+- [ ] `start_register_closing` devuelve la caja sin error al llamarla dos veces seguidas sobre la misma caja — es la prueba de que la 012 quedó aplicada.
 
 Si algo de esta lista falta o algún paso del SQL Editor tira error, compártelo tal cual — se corrige la migración correspondiente antes de seguir.
 

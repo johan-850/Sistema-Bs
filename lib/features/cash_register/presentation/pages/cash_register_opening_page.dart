@@ -19,6 +19,7 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/cash_register_providers.dart';
 import '../widgets/denomination_card.dart';
+import 'cash_register_closing_page.dart';
 
 class CashRegisterOpeningPage extends ConsumerWidget {
   const CashRegisterOpeningPage({super.key});
@@ -32,11 +33,14 @@ class CashRegisterOpeningPage extends ConsumerWidget {
       loading: () => const _LoadingScaffold(),
       error: (e, _) => _OpeningFormScaffold(error: e.toString()),
       data: (activeRegister) {
-        if (activeRegister != null && activeRegister.isOpen) {
-          // Ya hay caja abierta → mostrar estado "en turno"
+        // Cualquier caja sin cerrar cuenta, incluida una en 'closing'
+        // (un cierre que quedó a medias). Antes solo se miraba isOpen,
+        // así que una caja en ese estado era invisible para el cajero:
+        // no la podía retomar ni cerrar, y terminaba abriendo otra.
+        if (activeRegister != null && !activeRegister.isClosed) {
           return _ActiveRegisterScaffold(register: activeRegister);
         }
-        // No hay caja abierta → mostrar wizard de apertura
+        // No hay caja sin cerrar → mostrar wizard de apertura
         return const _OpeningFormScaffold();
       },
     );
@@ -69,6 +73,10 @@ class _ActiveRegisterScaffold extends ConsumerWidget {
     final user = ref.watch(authStateStreamProvider).valueOrNull;
     final fmt = NumberFormat('#,###', 'es_CO');
     final timeFmt = DateFormat('hh:mm a', 'es');
+
+    // Caja en 'closing': el cajero empezó el cierre y no lo terminó.
+    // Hay que dejarlo retomarlo, no mandarlo a vender otra vez.
+    final bool isClosing = register.isClosing;
 
     return Scaffold(
       body: SafeArea(
@@ -128,16 +136,16 @@ class _ActiveRegisterScaffold extends ConsumerWidget {
                         Container(
                           width: 10,
                           height: 10,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
+                          decoration: BoxDecoration(
+                            color: isClosing ? AppColors.warning : AppColors.success,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Turno activo',
+                          isClosing ? 'Cierre sin terminar' : 'Turno activo',
                           style: TextStyle(
-                            color: AppColors.success,
+                            color: isClosing ? AppColors.warning : AppColors.success,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -189,13 +197,46 @@ class _ActiveRegisterScaffold extends ConsumerWidget {
               ),
               const Spacer(),
 
-              // ── Botón ir al POS ─────────────────────────────
+              // ── Botón principal ─────────────────────────────
+              // Con el cierre a medias no tiene sentido mandarlo a
+              // vender: la caja ya no acepta ventas (confirm_sale exige
+              // status='open'), así que lo único útil es terminar.
+              if (isClosing)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 16, color: AppColors.warning),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Empezaste a cerrar esta caja y quedó a medias. Termina el cierre para poder abrir una nueva.',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => context.go(AppRoutes.pos),
-                  icon: const Icon(Icons.point_of_sale_rounded),
-                  label: const Text('Ir al Punto de Venta'),
+                  onPressed: () => isClosing
+                      ? Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CashRegisterClosingPage(register: register),
+                          ),
+                        )
+                      : context.go(AppRoutes.pos),
+                  icon: Icon(isClosing ? Icons.lock_clock_outlined : Icons.point_of_sale_rounded),
+                  label: Text(isClosing ? 'Terminar el cierre' : 'Ir al Punto de Venta'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     textStyle: const TextStyle(

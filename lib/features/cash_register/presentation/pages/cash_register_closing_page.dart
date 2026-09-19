@@ -27,12 +27,21 @@ class CashRegisterClosingPage extends ConsumerStatefulWidget {
 
 class _CashRegisterClosingPageState extends ConsumerState<CashRegisterClosingPage> {
   final _notesController = TextEditingController();
-  final _pageController = PageController();
+
+  /// La caja ya venía en 'closing': el cajero está retomando un cierre
+  /// que dejó a medias, no empezando uno. El paso 0 (iniciar el cierre)
+  /// ya se hizo, así que se entra directo al conteo.
+  late final bool _resuming = widget.register.isClosing;
+
+  late final _pageController = PageController(initialPage: _resuming ? 1 : 0);
 
   static const _steps = ['Resumen', 'Conteo', 'Confirmar'];
 
-  ClosingArgs get _args =>
-      (registerId: widget.register.id, openingAmount: widget.register.openingAmount);
+  ClosingArgs get _args => (
+        registerId: widget.register.id,
+        openingAmount: widget.register.openingAmount,
+        alreadyClosing: _resuming,
+      );
 
   @override
   void dispose() {
@@ -93,10 +102,17 @@ class _CashRegisterClosingPageState extends ConsumerState<CashRegisterClosingPag
     final settingsAsync = ref.watch(storeSettingsProvider);
     final threshold = settingsAsync.valueOrNull?.cashDiffCommentThreshold ?? 5000;
 
+    // Si el cierre lo inició ESTA pantalla, salirse dejaría la caja
+    // bloqueada sin que el cajero se entere: hay que retenerlo. Si ya
+    // venía en 'closing', llegó desde la pantalla de turno que se lo
+    // advirtió y puede volver a ella sin perder nada — encerrarlo ahí
+    // sería otro callejón sin salida.
+    final bool canLeave = _resuming || !state.started;
+
     return PopScope(
-      canPop: !state.started,
+      canPop: canLeave,
       onPopInvokedWithResult: (didPop, _) async {
-        if (didPop || !state.started) return;
+        if (didPop || canLeave) return;
         // El cierre ya se inició (caja en 'closing') — salir a medias
         // dejaría la caja bloqueada sin terminar el cuadre.
         AppSnackbar.warning(context, 'Ya iniciaste el cierre — debes completarlo para volver a vender.');
@@ -109,7 +125,7 @@ class _CashRegisterClosingPageState extends ConsumerState<CashRegisterClosingPag
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Row(
                   children: [
-                    if (!state.started)
+                    if (canLeave)
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.pop(context),
@@ -118,7 +134,7 @@ class _CashRegisterClosingPageState extends ConsumerState<CashRegisterClosingPag
                       child: Text('Cierre de Caja',
                           style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
                     ),
-                    if (!state.started) const SizedBox(width: 48),
+                    if (canLeave) const SizedBox(width: 48),
                   ],
                 ),
               ),

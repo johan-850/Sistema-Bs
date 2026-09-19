@@ -58,18 +58,28 @@ class CashRegisterRemoteDatasource {
 
   // ── US-008: Obtener caja activa del cajero ─────────────────
 
-  /// Busca una caja con status='open' del cajero actual, creada hoy (UTC).
-  /// Retorna null si no hay ninguna.
+  /// Busca la caja sin cerrar del cajero actual. Retorna null si no hay.
+  ///
+  /// La pregunta correcta es "¿este cajero tiene una caja sin cerrar?",
+  /// no "¿abrió una hoy?". Antes había un filtro `opening_time >= hoy`
+  /// calculado con `DateTime.utc(...)`, y ahí estaba el bug del turno
+  /// activo: Colombia es UTC−5, así que la medianoche UTC son las 7 de
+  /// la tarde locales. Una caja abierta a las 10 a.m. dejaba de cumplir
+  /// el filtro a las 7 p.m., en pleno turno. El cajero veía "no tienes
+  /// turno abierto", abría otra, y quedaban dos cajas abiertas: al
+  /// cerrar una, la pantalla seguía mostrando la otra como turno activo.
+  ///
+  /// Se incluye 'closing' además de 'open' para que un cierre abandonado
+  /// a mitad de camino se pueda retomar en vez de quedar huérfano, y se
+  /// ordena de forma explícita para que el resultado sea determinista
+  /// mientras existan duplicados de antes del arreglo.
   Future<CashRegister?> getActiveRegister(String cashierId) async {
-    final today = DateTime.now().toUtc();
-    final todayStart = DateTime.utc(today.year, today.month, today.day);
-
     final result = await _client
         .from(AppConstants.tableCashRegisters)
         .select('*, profiles(name)')
         .eq('cashier_id', cashierId)
-        .eq('status', 'open')
-        .gte('opening_time', todayStart.toIso8601String())
+        .inFilter('status', ['open', 'closing'])
+        .order('opening_time', ascending: false)
         .limit(1)
         .maybeSingle();
 

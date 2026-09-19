@@ -326,7 +326,13 @@ final registerHistoryProvider =
 // ── US-039/040/041/042: Wizard de cierre de caja ──────────────
 
 /// Argumentos para instanciar el wizard de cierre de una caja puntual.
-typedef ClosingArgs = ({String registerId, double openingAmount});
+/// [alreadyClosing] distingue empezar un cierre de retomar uno a medias:
+/// la caja ya está en 'closing' y start_register_closing() la rechazaría.
+typedef ClosingArgs = ({
+  String registerId,
+  double openingAmount,
+  bool alreadyClosing,
+});
 
 class RegisterClosingState {
   /// Cantidades ingresadas por denominación al contar el efectivo final.
@@ -411,13 +417,21 @@ class RegisterClosingNotifier extends StateNotifier<RegisterClosingState> {
   final String _registerId;
   final double _openingAmount;
 
+  /// Si la caja ya venía en 'closing', el cierre YA está iniciado: hay
+  /// que arrancar directo en el conteo. Llamar a confirmStart() otra vez
+  /// reventaría contra start_register_closing(), que exige status='open',
+  /// y el cajero quedaría sin poder terminar nunca el cuadre.
   RegisterClosingNotifier(
     this._getPreview,
     this._startClosing,
     this._closeRegister,
     this._registerId,
-    this._openingAmount,
-  ) : super(const RegisterClosingState()) {
+    this._openingAmount, {
+    bool alreadyClosing = false,
+  }) : super(RegisterClosingState(
+          started: alreadyClosing,
+          currentStep: alreadyClosing ? 1 : 0,
+        )) {
     _initBreakdown();
     loadPreview();
   }
@@ -507,5 +521,6 @@ final registerClosingProvider = StateNotifierProvider.autoDispose
     ref.read(closeRegisterUseCaseProvider),
     args.registerId,
     args.openingAmount,
+    alreadyClosing: args.alreadyClosing,
   ),
 );

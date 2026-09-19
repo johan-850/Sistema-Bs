@@ -1,0 +1,34 @@
+-- ============================================================
+-- Sistema Bs — Migración 013: una sola confirm_sale
+-- USB-039 (SB-03) — corrección heredada de Sistema AS
+-- ============================================================
+
+-- El problema: hay DOS confirm_sale conviviendo en la base.
+--
+--   005_sales.sql              la creó con 5 parámetros
+--   007_qr_and_receipt_photo   hizo CREATE OR REPLACE con 6
+--
+-- Al cambiar la aridad, Postgres NO reemplaza: crea una sobrecarga. No
+-- hay un solo DROP FUNCTION en todo el repositorio, así que las dos
+-- siguen ahí.
+--
+-- Hoy funciona por casualidad: la app manda los parámetros por nombre y
+-- los 6 completos, así que PostgREST resuelve a la de 6. Pero la de 5
+-- sigue viva con la lógica vieja —sin foto de comprobante— y basta una
+-- llamada posicional de 5 argumentos para cobrar por el camino
+-- equivocado. Cualquier cambio futuro de firma volvería la resolución
+-- ambigua.
+--
+-- Se borra solo la de 5. La de 6 (la vigente, con p_receipt_photo_url
+-- DEFAULT NULL) queda intacta: sigue aceptando llamadas de 5
+-- argumentos usando su valor por defecto, así que no se pierde nada.
+DROP FUNCTION IF EXISTS public.confirm_sale(UUID, TEXT, NUMERIC, NUMERIC, JSONB);
+
+-- ── Verificación ──────────────────────────────────────────────
+-- Después de correr esto, la consulta de abajo debe devolver UNA fila,
+-- con 6 argumentos:
+--
+-- SELECT p.oid::regprocedure AS firma, pg_get_function_arguments(p.oid) AS argumentos
+-- FROM pg_proc p
+-- JOIN pg_namespace n ON n.oid = p.pronamespace
+-- WHERE n.nspname = 'public' AND p.proname = 'confirm_sale';
