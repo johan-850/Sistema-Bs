@@ -103,6 +103,23 @@ feature/
     └── providers/# Riverpod providers
 ```
 
+### Puntos de quiebre
+
+Definidos una sola vez en [`lib/core/theme/breakpoints.dart`](lib/core/theme/breakpoints.dart). Ninguna pantalla compara anchos a mano.
+
+| Punto | Ancho | Uso |
+|---|---|---|
+| `compact` | < 768 px | Una columna; comportamiento heredado de móvil |
+| `medium` | 768 – 1279 px | Barra lateral de solo íconos, dos columnas donde aplique |
+| `expanded` | ≥ 1280 px | Layout completo de escritorio — el objetivo real |
+
+```dart
+if (context.isExpanded) { ... }        // según el ancho de la ventana
+switch (context.breakpoint) { ... }    // enum Breakpoint
+```
+
+`context.breakpoint` mide la **ventana**. Dentro de un panel que no ocupa todo el ancho (por ejemplo el carrito del POS) se usa `LayoutBuilder` con `Breakpoints.of(constraints.maxWidth)`. Para cuadrículas, `SliverGridDelegateWithMaxCrossAxisExtent` ya reparte columnas según el espacio disponible y no necesita punto de quiebre.
+
 ---
 
 ## Stack Tecnológico
