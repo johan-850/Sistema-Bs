@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../products/domain/entities/product.dart';
 import '../providers/inventory_providers.dart';
@@ -25,17 +26,10 @@ class StockAdjustmentSheet extends ConsumerStatefulWidget {
   const StockAdjustmentSheet({super.key, required this.product});
 
   static Future<bool?> show(BuildContext context, Product product) {
-    return showModalBottomSheet<bool>(
+    return showAdaptiveSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: StockAdjustmentSheet(product: product),
-      ),
+      builder: (_) => StockAdjustmentSheet(product: product),
     );
   }
 

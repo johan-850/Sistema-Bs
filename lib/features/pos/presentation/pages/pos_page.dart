@@ -14,6 +14,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/stock_tier.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/product_thumbnail.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
@@ -228,12 +229,9 @@ class _PosPageState extends ConsumerState<PosPage> {
   void _showShiftInfo(BuildContext context, CashRegister register) {
     final dateFmt = DateFormat('dd/MM/yyyy hh:mm a', 'es');
     final currencyFmt = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-    showModalBottomSheet(
+    showAdaptiveSheet(
       context: context,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      maxWidth: 440,
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

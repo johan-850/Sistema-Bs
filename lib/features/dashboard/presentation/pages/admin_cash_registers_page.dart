@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../cash_register/domain/entities/cash_register.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
@@ -81,12 +83,8 @@ class _AdminCashRegistersPageState
     String? cashierId;
     final cashiers = ref.read(cashierListProvider).cashiers;
 
-    showModalBottomSheet(
+    showAdaptiveSheet(
       context: context,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModal) => Padding(
           padding: const EdgeInsets.all(24),
@@ -164,25 +162,25 @@ class _AdminCashRegistersPageState
   // ── Detail bottom sheet (US-011 — detalle de denominaciones) ─
 
   void _showDetailSheet(BuildContext context, CashRegister register) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surfaceCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (_, scrollCtrl) => _RegisterDetailSheet(
+    Widget detail(ScrollController? scrollCtrl) => _RegisterDetailSheet(
           register: register,
           currencyFmt: _currencyFmt,
           fullDateFmt: _fullDateFmt,
           scrollController: scrollCtrl,
-        ),
-      ),
+        );
+
+    showAdaptiveSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => ctx.isCompact
+          ? DraggableScrollableSheet(
+              initialChildSize: 0.65,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, scrollCtrl) => detail(scrollCtrl),
+            )
+          : detail(null),
     );
   }
 }
@@ -339,7 +337,8 @@ class _RegisterDetailSheet extends StatelessWidget {
   final CashRegister register;
   final NumberFormat currencyFmt;
   final DateFormat fullDateFmt;
-  final ScrollController scrollController;
+  /// Null en el diálogo de escritorio: sin hoja arrastrable que lo controle.
+  final ScrollController? scrollController;
 
   const _RegisterDetailSheet({
     required this.register,
@@ -357,22 +356,25 @@ class _RegisterDetailSheet extends StatelessWidget {
         .where((e) => e.key.startsWith('bill_') && e.value > 0)
         .toList();
 
+    final draggable = scrollController != null;
+
     return ListView(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      shrinkWrap: !draggable,
+      padding: EdgeInsets.fromLTRB(24, draggable ? 8 : 24, 24, 24),
       children: [
-        // Drag handle
-        Center(
-          child: Container(
-            width: 36,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
+        if (draggable)
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
-        ),
 
         // Cajero + timestamp (US-012)
         Text(

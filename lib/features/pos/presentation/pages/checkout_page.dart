@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
 import '../../../settings/presentation/providers/store_settings_providers.dart';
@@ -438,13 +439,11 @@ class _ReceiptPhotoPicker extends ConsumerWidget {
     );
   }
 
+  // TODO(SB-04): en escritorio no hay cámara; selector de archivo directo, sin menú intermedio.
   void _pick(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    showAdaptiveSheet(
       context: context,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      maxWidth: 400,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

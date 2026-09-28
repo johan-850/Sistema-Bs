@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../pos/domain/repositories/sale_repository.dart';
 import '../../../pos/presentation/providers/statistics_providers.dart';
 
@@ -502,10 +503,8 @@ class _CategoryBreakdownSection extends ConsumerWidget {
   }
 
   void _showDrillDown(BuildContext context, String category) {
-    showModalBottomSheet(
+    showAdaptiveSheet(
       context: context,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (_) => _CategoryDrillDownSheet(category: category),
     );
   }

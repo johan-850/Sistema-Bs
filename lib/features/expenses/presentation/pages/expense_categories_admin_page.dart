@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/expense_category_icons.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/expense_category.dart';
 import '../providers/expense_providers.dart';
@@ -66,15 +67,10 @@ class ExpenseCategoriesAdminPage extends ConsumerWidget {
   }
 
   Future<void> _openForm(BuildContext context, WidgetRef ref, {ExpenseCategory? existing}) async {
-    final result = await showModalBottomSheet<({String name, String icon})>(
+    final result = await showAdaptiveSheet<({String name, String icon})>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: _CategoryFormSheet(existing: existing),
-      ),
+      builder: (_) => _CategoryFormSheet(existing: existing),
     );
     if (result == null || !context.mounted) return;
 

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/expense_category_icons.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../settings/presentation/providers/store_settings_providers.dart';
@@ -26,17 +27,10 @@ class RegisterExpenseSheet extends ConsumerStatefulWidget {
   const RegisterExpenseSheet({super.key, required this.cashRegisterId, this.existing});
 
   static Future<bool?> show(BuildContext context, {required String cashRegisterId, Expense? existing}) {
-    return showModalBottomSheet<bool>(
+    return showAdaptiveSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: RegisterExpenseSheet(cashRegisterId: cashRegisterId, existing: existing),
-      ),
+      builder: (_) => RegisterExpenseSheet(cashRegisterId: cashRegisterId, existing: existing),
     );
   }
 
