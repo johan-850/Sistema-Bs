@@ -91,13 +91,15 @@ class _SalesKpiSection extends ConsumerWidget {
           children: [
             Text('Ventas', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
-            GridView.count(
+            GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 1.6,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 280,
+                mainAxisExtent: 88,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
               children: [
                 _KpiCard(label: 'Hoy', value: currencyFmt.format(kpis.todayTotal), sub: '${kpis.todayCount} ventas'),
                 _KpiCard(

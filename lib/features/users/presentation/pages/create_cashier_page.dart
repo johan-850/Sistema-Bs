@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/users_providers.dart';
@@ -58,7 +59,7 @@ class _CreateCashierPageState extends ConsumerState<CreateCashierPage> {
       appBar: AppBar(title: const Text('Nuevo Cajero')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Form(
+        child: ReadableWidth(maxWidth: 560, child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -167,7 +168,7 @@ class _CreateCashierPageState extends ConsumerState<CreateCashierPage> {
               ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }

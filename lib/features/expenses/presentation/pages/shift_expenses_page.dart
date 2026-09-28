@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
 import '../../../settings/presentation/providers/store_settings_providers.dart';
 import '../../domain/entities/expense.dart';
@@ -140,7 +141,7 @@ class _ExpenseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return HoverInkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(

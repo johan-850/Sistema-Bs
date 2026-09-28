@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
@@ -208,7 +209,7 @@ class _RegisterCard extends StatelessWidget {
     final isOpen = register.isOpen;
     final isClosing = register.isClosing;
 
-    return InkWell(
+    return HoverInkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
@@ -642,7 +643,7 @@ class _DatePickerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd/MM/yyyy');
-    return InkWell(
+    return HoverInkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: () async {
         final picked = await showDatePicker(

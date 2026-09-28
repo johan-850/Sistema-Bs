@@ -13,6 +13,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/product_list_card.dart';
 import '../providers/product_providers.dart';
 
@@ -392,13 +393,13 @@ class _ActiveFiltersChip extends StatelessWidget {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: onClear,
-            child: const Icon(
-              Icons.close_rounded,
-              size: 16,
-              color: AppColors.primary,
-            ),
+          IconButton(
+            tooltip: 'Quitar filtros',
+            onPressed: onClear,
+            icon: const Icon(Icons.close_rounded, color: AppColors.primary),
+            iconSize: 16,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
           ),
         ],
       ),
@@ -423,8 +424,9 @@ class _StockAlertChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HoverInkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(

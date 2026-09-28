@@ -16,6 +16,7 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/stock_tier.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/product_thumbnail.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -392,8 +393,9 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HoverInkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -486,7 +488,7 @@ class _VentaProductTile extends StatelessWidget {
             style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 15),
           ),
           const SizedBox(width: 10),
-          InkWell(
+          HoverInkWell(
             onTap: outOfStock ? null : onAdd,
             borderRadius: BorderRadius.circular(8),
             child: Container(

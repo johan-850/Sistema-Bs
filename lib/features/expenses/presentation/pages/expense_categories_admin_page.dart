@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/utils/expense_category_icons.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -192,7 +193,7 @@ class _CategoryFormSheetState extends State<_CategoryFormSheet> {
               runSpacing: 10,
               children: expenseCategoryIconOptions.entries.map((entry) {
                 final selected = _selectedIcon == entry.key;
-                return InkWell(
+                return HoverInkWell(
                   onTap: () => setState(() => _selectedIcon = entry.key),
                   borderRadius: BorderRadius.circular(10),
                   child: Container(

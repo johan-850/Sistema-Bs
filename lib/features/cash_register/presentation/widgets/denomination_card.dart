@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 
 /// Tarjeta para ingresar la cantidad de una denominación específica.
 ///
@@ -256,8 +257,10 @@ class _StepperButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HoverInkWell(
       onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(8),
+      focusable: false,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: 30,

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../../pos/domain/entities/sale.dart';
@@ -59,7 +60,7 @@ class _SaleDetailBody extends ConsumerWidget {
     final currencyFmt = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     final dateFmt = DateFormat('dd/MM/yyyy hh:mm a', 'es');
 
-    return ListView(
+    return ReadableListView(
       padding: const EdgeInsets.all(20),
       children: [
         if (sale.isCancelled) ...[

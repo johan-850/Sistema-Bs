@@ -13,6 +13,7 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../products/domain/entities/product.dart';
@@ -272,7 +273,7 @@ class _DateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd/MM/yyyy');
-    return InkWell(
+    return HoverInkWell(
       borderRadius: BorderRadius.circular(10),
       onTap: () async {
         final picked = await showDatePicker(

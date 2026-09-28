@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
@@ -48,7 +49,7 @@ class ProductCsvImportPage extends ConsumerWidget {
           onPressed: () => context.go('/admin/products'),
         ),
       ),
-      body: ListView(
+      body: ReadableListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         children: [
           // ── Formato esperado ──

@@ -72,6 +72,9 @@ abstract class AppTheme {
     );
 
     return base.copyWith(
+      // Explícito: la densidad adaptativa depende del SO que reporta el
+      // navegador, y esta app siempre se opera con mouse.
+      visualDensity: VisualDensity.compact,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
@@ -106,7 +109,7 @@ abstract class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceElevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.border),
@@ -131,7 +134,7 @@ abstract class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.black,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
         ),
@@ -140,7 +143,7 @@ abstract class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
         ),

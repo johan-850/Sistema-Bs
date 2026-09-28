@@ -12,6 +12,7 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../domain/entities/sale.dart';
@@ -32,7 +33,7 @@ class ReceiptPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(title: const Text('Recibo'), automaticallyImplyLeading: false),
-      body: ListView(
+      body: ReadableListView(
         padding: const EdgeInsets.all(20),
         children: [
           const Center(

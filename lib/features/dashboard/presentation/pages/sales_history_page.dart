@@ -18,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../pos/domain/entities/sale.dart';
@@ -206,7 +207,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
             else
               ...state.sales.map((sale) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: InkWell(
+                    child: HoverInkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () => context.push('/admin/sales-history/${sale.id}'),
                       child: Container(

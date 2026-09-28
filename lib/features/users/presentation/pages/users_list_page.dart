@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../domain/entities/cashier.dart';
 import '../providers/users_providers.dart';
 
@@ -159,8 +160,9 @@ class _FilterBar extends StatelessWidget {
 
   Widget _chip(String label, bool? value) {
     final isSelected = selected == value;
-    return GestureDetector(
+    return HoverInkWell(
       onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -198,8 +200,9 @@ class _CashierCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fmt = DateFormat('dd MMM yyyy, HH:mm', 'es');
-    return GestureDetector(
+    return HoverInkWell(
       onTap: onDetail,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

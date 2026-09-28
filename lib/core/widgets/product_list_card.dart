@@ -11,6 +11,8 @@ import 'package:intl/intl.dart';
 
 import '../../features/products/domain/entities/product.dart';
 import '../theme/app_theme.dart';
+import 'hover_ink_well.dart';
+import 'readable_width.dart';
 import 'product_thumbnail.dart';
 
 class ProductListCard extends StatelessWidget {
@@ -189,11 +191,16 @@ class ProductListCard extends StatelessWidget {
       ),
     );
 
-    if (onTap == null) return card;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: card,
+    // Tope de ancho: en un monitor la fila era una barra de 1900 px.
+    return ReadableWidth(
+      maxWidth: 960,
+      child: onTap == null
+          ? card
+          : HoverInkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12),
+              child: card,
+            ),
     );
   }
 }

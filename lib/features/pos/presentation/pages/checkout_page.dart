@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
@@ -269,7 +270,7 @@ class _PaymentMethodButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return HoverInkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(

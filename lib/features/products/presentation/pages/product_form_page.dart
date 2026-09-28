@@ -16,11 +16,13 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../providers/product_providers.dart';
 import '../../domain/entities/product.dart';
 
@@ -174,7 +176,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
               child: CircularProgressIndicator(color: AppColors.primary))
           : Form(
               key: _formKey,
-              child: ListView(
+              child: ReadableListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
                   // ── Foto de producto ──
@@ -495,8 +497,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   bool get _hasImage => _imageUrl != null && _imageUrl!.isNotEmpty;
 
   Widget _buildPhotoPicker() {
-    return GestureDetector(
+    return HoverInkWell(
       onTap: _isUploadingImage ? null : _showImageSourceSheet,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 96,
         height: 96,

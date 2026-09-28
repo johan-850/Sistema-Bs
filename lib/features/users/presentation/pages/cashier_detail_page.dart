@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/readable_width.dart';
+import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
@@ -29,7 +31,7 @@ class CashierDetailPage extends ConsumerWidget {
       appBar: AppBar(title: Text(cashier.name)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
+        child: ReadableWidth(child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Avatar y estado ────────────────────────────
@@ -117,7 +119,7 @@ class CashierDetailPage extends ConsumerWidget {
               onTap: () => _confirmToggleExpenses(context, ref, cashier.id, cashier.expensesEnabled, cashier.name),
             ),
           ],
-        ),
+        )),
       ),
     );
   }
@@ -226,7 +228,7 @@ class _ActionTile extends StatelessWidget {
     return Material(
       color: AppColors.surfaceCard,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
+      child: HoverInkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
