@@ -3,6 +3,7 @@ abstract class AppRoutes {
   static const login                = '/login';
   static const adminDashboard       = '/admin';
   static const cashRegisterOpening  = '/cash-register/opening';
+  static const cashRegisterClosing  = '/cash-register/closing';
   static const cashRegistersHistory = '/admin/cash-registers';   // US-011
   static const pos                  = '/pos';
   static const cart                 = '/pos/cart';               // US-027/US-028

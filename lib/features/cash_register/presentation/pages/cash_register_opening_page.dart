@@ -19,7 +19,6 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/cash_register_providers.dart';
 import '../widgets/denomination_card.dart';
-import 'cash_register_closing_page.dart';
 
 class CashRegisterOpeningPage extends ConsumerWidget {
   const CashRegisterOpeningPage({super.key});
@@ -228,12 +227,7 @@ class _ActiveRegisterScaffold extends ConsumerWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => isClosing
-                      ? Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => CashRegisterClosingPage(register: register),
-                          ),
-                        )
+                      ? context.push(AppRoutes.cashRegisterClosing, extra: register)
                       : context.go(AppRoutes.pos),
                   icon: Icon(isClosing ? Icons.lock_clock_outlined : Icons.point_of_sale_rounded),
                   label: Text(isClosing ? 'Terminar el cierre' : 'Ir al Punto de Venta'),

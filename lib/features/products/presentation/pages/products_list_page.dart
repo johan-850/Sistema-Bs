@@ -52,10 +52,6 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Inventario'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/admin'),
-        ),
         actions: [
           // US-019: Importar productos desde CSV
           IconButton(

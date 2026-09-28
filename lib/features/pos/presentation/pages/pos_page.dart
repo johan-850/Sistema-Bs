@@ -12,13 +12,13 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/stock_tier.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/product_thumbnail.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../cash_register/domain/entities/cash_register.dart';
-import '../../../cash_register/presentation/pages/cash_register_closing_page.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
 import '../../../products/domain/entities/product.dart';
 import '../../../products/presentation/providers/product_providers.dart'
@@ -116,21 +116,14 @@ class _PosPageState extends ConsumerState<PosPage> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Escanear',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            onPressed: _scanAndAdd,
+          ),
+          IconButton(
             tooltip: 'Info del turno',
             icon: const Icon(Icons.access_time_rounded),
             onPressed: () => _showShiftInfo(context, register),
-          ),
-          // US-038: oculto si el AdminMaster deshabilitó el módulo para este cajero.
-          if (user?.expensesEnabled ?? true)
-            IconButton(
-              tooltip: 'Gastos',
-              icon: const Icon(Icons.payments_outlined),
-              onPressed: () => context.push('/pos/expenses'),
-            ),
-          IconButton(
-            tooltip: 'Configuración',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
@@ -148,8 +141,15 @@ class _PosPageState extends ConsumerState<PosPage> {
                 hintStyle: const TextStyle(color: AppColors.textDisabled),
                 prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.textSecondary),
-                  onPressed: () => context.push('/pos/cart'),
+                  tooltip: 'Carrito',
+                  icon: Badge(
+                    isLabelVisible: cartState.totalItems > 0,
+                    label: Text('${cartState.totalItems}'),
+                    backgroundColor: AppColors.primary,
+                    textColor: Colors.black,
+                    child: const Icon(Icons.shopping_cart_outlined, color: AppColors.textSecondary),
+                  ),
+                  onPressed: () => context.go(AppRoutes.cart),
                 ),
                 filled: true,
                 fillColor: AppColors.surfaceElevated,
@@ -215,10 +215,6 @@ class _PosPageState extends ConsumerState<PosPage> {
           ),
         ],
       ),
-      bottomNavigationBar: _PosBottomNav(
-        cartItemCount: cartState.totalItems,
-        onScan: _scanAndAdd,
-      ),
     );
   }
 
@@ -276,14 +272,8 @@ class _PosPageState extends ConsumerState<PosPage> {
     );
   }
 
-  /// US-039: abre el wizard de cierre — igual patrón de Navigator.push
-  /// (no go_router) que BarcodeScannerPage/CheckoutPage, porque el
-  /// register no es serializable a una ruta con nombre.
   void _goToClosing(BuildContext context, CashRegister register) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => CashRegisterClosingPage(register: register)),
-    );
+    context.push(AppRoutes.cashRegisterClosing, extra: register);
   }
 
   /// US-025: escanea con la cámara, busca el producto y lo agrega.
@@ -349,56 +339,6 @@ class _ShiftInfoRow extends StatelessWidget {
         ),
         Expanded(
           child: Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Barra de navegación inferior (Ventas / Stock / Escanear / Carrito) ─
-
-class _PosBottomNav extends StatelessWidget {
-  final int cartItemCount;
-  final VoidCallback onScan;
-
-  const _PosBottomNav({required this.cartItemCount, required this.onScan});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: AppColors.surfaceCard,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.textSecondary,
-      onTap: (i) {
-        switch (i) {
-          case 0:
-            break; // Ventas: ya estamos aquí
-          case 1:
-            context.push('/catalog');
-            break;
-          case 2:
-            onScan();
-            break;
-          case 3:
-            context.push('/pos/cart');
-            break;
-        }
-      },
-      items: [
-        const BottomNavigationBarItem(icon: Icon(Icons.storefront_rounded), label: 'Ventas'),
-        const BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Stock'),
-        const BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner_rounded), label: 'Escanear'),
-        BottomNavigationBarItem(
-          icon: Badge(
-            isLabelVisible: cartItemCount > 0,
-            label: Text('$cartItemCount'),
-            backgroundColor: AppColors.primary,
-            textColor: Colors.black,
-            child: const Icon(Icons.shopping_cart_outlined),
-          ),
-          label: 'Carrito',
         ),
       ],
     );

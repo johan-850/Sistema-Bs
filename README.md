@@ -109,9 +109,9 @@ Definidos una sola vez en [`lib/core/theme/breakpoints.dart`](lib/core/theme/bre
 
 | Punto | Ancho | Uso |
 |---|---|---|
-| `compact` | < 768 px | Una columna; comportamiento heredado de móvil |
+| `compact` | < 768 px | Barra lateral de solo íconos, contenido en una columna |
 | `medium` | 768 – 1279 px | Barra lateral de solo íconos, dos columnas donde aplique |
-| `expanded` | ≥ 1280 px | Layout completo de escritorio — el objetivo real |
+| `expanded` | ≥ 1280 px | Barra lateral con etiquetas y secciones — el objetivo real |
 
 ```dart
 if (context.isExpanded) { ... }        // según el ancho de la ventana

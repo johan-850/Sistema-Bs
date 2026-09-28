@@ -61,10 +61,6 @@ class _InventoryDashboardPageState
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Inventario'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/admin'),
-        ),
         actions: [
           IconButton(
             tooltip: 'Lista de restock',
