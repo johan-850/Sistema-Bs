@@ -26,32 +26,8 @@ import '../../features/expenses/presentation/pages/expenses_report_admin_page.da
 import '../../features/dashboard/presentation/pages/sales_history_page.dart';
 import '../../features/dashboard/presentation/pages/sale_detail_page.dart';
 import '../../features/dashboard/presentation/pages/sales_statistics_page.dart';
-
-// ── Rutas nombradas ─────────────────────────────────────────
-abstract class AppRoutes {
-  static const login                = '/login';
-  static const adminDashboard       = '/admin';
-  static const cashRegisterOpening  = '/cash-register/opening';
-  static const cashRegistersHistory = '/admin/cash-registers';   // US-011
-  static const pos                  = '/pos';
-  static const cart                 = '/pos/cart';               // US-027/US-028
-  static const catalog              = '/catalog';               // US-018
-  static const products             = '/admin/products';
-  static const inventory            = '/admin/inventory';       // US-020
-  static const inventoryRestock     = '/admin/inventory/restock'; // US-024
-  static const users                = '/admin/users';
-  static const createCashier        = '/admin/users/create';
-  static const cashierDetail        = '/admin/users/:id';
-  static const settings             = '/settings';
-  static const reports              = '/admin/reports';
-  static const analytics            = '/admin/analytics';
-  static const posExpenses          = '/pos/expenses';           // US-035
-  static const expensesReport       = '/admin/expenses';         // US-037
-  static const expenseCategories    = '/admin/expenses/categories'; // US-036
-  static const salesHistory         = '/admin/sales-history';    // US-044
-  static const saleDetail           = '/admin/sales-history/:id'; // US-047
-}
-
+import 'app_routes.dart';
+import 'route_guard.dart';
 
 // ── Provider del router ─────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -60,22 +36,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.login,
     redirect: (context, state) {
-      // Si el stream aún está cargando, no redirigir todavía
+      // Mientras carga no se muestra ninguna pantalla (ver SistemaBsApp).
       if (authStream.isLoading) return null;
-
-      final user = authStream.valueOrNull;
-      final isLoggedIn = user != null;
-      final isLoginPage = state.matchedLocation == AppRoutes.login;
-
-      if (!isLoggedIn && !isLoginPage) return AppRoutes.login;
-      if (isLoggedIn && isLoginPage) {
-        // Leer el rol directamente del usuario ya cargado (evita race condition)
-        final role = user.role;
-        return role == 'adminmaster'
-            ? AppRoutes.adminDashboard
-            : AppRoutes.cashRegisterOpening;
-      }
-      return null;
+      return resolveRedirect(
+        user: authStream.valueOrNull,
+        path: state.uri.path,
+      );
     },
     routes: [
       GoRoute(

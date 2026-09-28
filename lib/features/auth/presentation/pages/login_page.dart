@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/router/route_guard.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -51,12 +52,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
     if (user != null) {
       // US-002: mensaje de bienvenida con nombre
       AppSnackbar.success(context, '¡Bienvenido/a, ${user.name}! 👋');
-      // US-001 / US-002: redirección por rol
-      if (user.isAdmin) {
-        context.go('/admin');
-      } else {
-        context.go('/cash-register/opening');
-      }
+      context.go(homeFor(user));
     }
   }
 

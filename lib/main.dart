@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/providers/auth_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,8 @@ class SistemaBsApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final authLoading =
+        ref.watch(authStateStreamProvider.select((a) => a.isLoading));
 
     return MaterialApp.router(
       title: 'Sistema Bs',
@@ -48,6 +51,18 @@ class SistemaBsApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
       routerConfig: router,
+      // Al recargar en web el redirect no puede validar el rol hasta que
+      // llegue la sesión; sin esto la pantalla de la URL alcanza a montarse.
+      builder: (context, child) =>
+          authLoading ? const _AuthLoadingScreen() : child!,
     );
   }
+}
+
+class _AuthLoadingScreen extends StatelessWidget {
+  const _AuthLoadingScreen();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
