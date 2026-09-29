@@ -12,7 +12,7 @@ import '../../domain/entities/sale.dart';
 import '../../domain/entities/sale_item.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../domain/repositories/sale_repository.dart'
-    show TopProduct, DailySales, CategoryStat, CashierPerformance;
+    show TopProduct, DailySales, CategoryStat, CashierPerformance, SaleSort;
 import '../../../../core/constants/app_constants.dart';
 
 class SaleRemoteDatasource {
@@ -157,6 +157,8 @@ class SaleRemoteDatasource {
     String? searchId,
     int page = 0,
     int pageSize = 20,
+    SaleSort sortBy = SaleSort.date,
+    bool ascending = false,
   }) async {
     // US-044: sale_items(product_name, quantity) embebido — evita una
     // consulta N+1 por fila para mostrar qué se vendió en el historial.
@@ -173,8 +175,17 @@ class SaleRemoteDatasource {
       if (maxAmount != null) q = q.lte('total', maxAmount);
     }
 
-    final result = await q
-        .order('created_at', ascending: false)
+    // USB-025: la fecha (y el id, por si dos ventas caen en el mismo
+    // instante) desempatan, para que las páginas no repitan filas.
+    final column = switch (sortBy) {
+      SaleSort.date => 'created_at',
+      SaleSort.total => 'total',
+      SaleSort.paymentMethod => 'payment_method',
+    };
+    var ordered = q.order(column, ascending: ascending);
+    if (sortBy != SaleSort.date) ordered = ordered.order('created_at', ascending: false);
+    final result = await ordered
+        .order('id', ascending: true)
         .range(page * pageSize, (page + 1) * pageSize - 1);
     return (result as List).map((e) => _fromJson(e as Map<String, dynamic>)).toList();
   }

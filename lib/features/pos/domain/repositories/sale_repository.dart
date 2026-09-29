@@ -15,6 +15,9 @@ typedef SaleResult = ({Sale? sale, Failure? failure});
 // ── EP-08: historial y reportes (AdminMaster) ──────────────────
 
 typedef SalesHistoryResult = ({List<Sale> sales, Failure? failure});
+
+/// USB-025: columna por la que se ordena el historial, en el servidor.
+enum SaleSort { date, total, paymentMethod }
 typedef SaleDetailResult = ({Sale? sale, List<SaleItem> items, Failure? failure});
 
 /// US-048: resumen ejecutivo para las tarjetas KPI del dashboard.
@@ -127,6 +130,8 @@ abstract class SaleRepository {
     String? searchId,
     int page = 0,
     int pageSize = 20,
+    SaleSort sortBy = SaleSort.date,
+    bool ascending = false,
   });
 
   /// US-047: la venta + sus ítems, con [SaleItem.isProductArchived]

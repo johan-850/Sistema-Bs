@@ -118,6 +118,8 @@ class SaleRepositoryImpl implements SaleRepository {
     String? searchId,
     int page = 0,
     int pageSize = 20,
+    SaleSort sortBy = SaleSort.date,
+    bool ascending = false,
   }) async {
     try {
       final sales = await _datasource.getSalesHistory(
@@ -130,6 +132,8 @@ class SaleRepositoryImpl implements SaleRepository {
         searchId: searchId,
         page: page,
         pageSize: pageSize,
+        sortBy: sortBy,
+        ascending: ascending,
       );
       return (sales: sales, failure: null);
     } catch (e) {

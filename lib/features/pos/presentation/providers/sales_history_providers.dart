@@ -33,6 +33,9 @@ class SalesHistoryState {
   final int currentPage;
   final Failure? failure;
 
+  /// La página cargada vino llena: puede haber otra después (USB-025).
+  final bool hasNextPage;
+
   final DateTime? filterDateFrom;
   final DateTime? filterDateTo;
   final String? filterCashierId;
@@ -41,11 +44,16 @@ class SalesHistoryState {
   final double? filterMaxAmount;
   final String? filterSearchId;
 
+  // USB-025: orden, aplicado en el servidor. Por defecto, lo más reciente.
+  final SaleSort sortBy;
+  final bool ascending;
+
   const SalesHistoryState({
     this.sales = const [],
     this.isLoading = false,
     this.currentPage = 0,
     this.failure,
+    this.hasNextPage = false,
     this.filterDateFrom,
     this.filterDateTo,
     this.filterCashierId,
@@ -53,6 +61,8 @@ class SalesHistoryState {
     this.filterMinAmount,
     this.filterMaxAmount,
     this.filterSearchId,
+    this.sortBy = SaleSort.date,
+    this.ascending = false,
   });
 
   bool get hasActiveFilters =>
@@ -78,12 +88,18 @@ class SalesHistoryState {
     double? filterMaxAmount,
     String? filterSearchId,
     bool clearFilters = false,
+    bool? hasNextPage,
+    SaleSort? sortBy,
+    bool? ascending,
   }) =>
       SalesHistoryState(
         sales: sales ?? this.sales,
         isLoading: isLoading ?? this.isLoading,
         currentPage: currentPage ?? this.currentPage,
         failure: clearFailure ? null : (failure ?? this.failure),
+        hasNextPage: hasNextPage ?? this.hasNextPage,
+        sortBy: sortBy ?? this.sortBy,
+        ascending: ascending ?? this.ascending,
         filterDateFrom: clearFilters ? null : (filterDateFrom ?? this.filterDateFrom),
         filterDateTo: clearFilters ? null : (filterDateTo ?? this.filterDateTo),
         filterCashierId: clearFilters ? null : (filterCashierId ?? this.filterCashierId),
@@ -100,6 +116,9 @@ class SalesHistoryNotifier extends StateNotifier<SalesHistoryState> {
     load();
   }
 
+  /// Filas por página: una tabla de escritorio muestra más que una lista.
+  static const pageSize = 50;
+
   Future<void> load({int page = 0}) async {
     state = state.copyWith(isLoading: true, currentPage: page, clearFailure: true);
 
@@ -112,12 +131,34 @@ class SalesHistoryNotifier extends StateNotifier<SalesHistoryState> {
       maxAmount: state.filterMaxAmount,
       searchId: state.filterSearchId,
       page: page,
+      pageSize: pageSize,
+      sortBy: state.sortBy,
+      ascending: state.ascending,
     );
 
     state = result.failure != null
         ? state.copyWith(isLoading: false, failure: result.failure)
-        : state.copyWith(isLoading: false, sales: result.sales);
+        : state.copyWith(
+            isLoading: false,
+            sales: result.sales,
+            hasNextPage: result.sales.length == pageSize,
+          );
   }
+
+  /// USB-025: ordena por [column]; si ya era esa columna, invierte. Una
+  /// columna nueva empieza por lo más reciente o lo más alto.
+  Future<void> sort(SaleSort column) async {
+    state = state.copyWith(
+      sortBy: column,
+      ascending: state.sortBy == column ? !state.ascending : column == SaleSort.paymentMethod,
+    );
+    await load();
+  }
+
+  Future<void> nextPage() => load(page: state.currentPage + 1);
+
+  Future<void> previousPage() =>
+      load(page: state.currentPage > 0 ? state.currentPage - 1 : 0);
 
   Future<void> searchById(String? id) async {
     state = state.copyWith(filterSearchId: id, clearFilters: id == null || id.isEmpty);
@@ -139,12 +180,15 @@ class SalesHistoryNotifier extends StateNotifier<SalesHistoryState> {
       filterPaymentMethod: paymentMethod,
       filterMinAmount: minAmount,
       filterMaxAmount: maxAmount,
+      // Cambiar filtros no deshace el orden elegido.
+      sortBy: state.sortBy,
+      ascending: state.ascending,
     );
     await load();
   }
 
   Future<void> clearFilters() async {
-    state = const SalesHistoryState();
+    state = SalesHistoryState(sortBy: state.sortBy, ascending: state.ascending);
     await load();
   }
 }

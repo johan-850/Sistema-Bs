@@ -99,6 +99,8 @@ class GetSalesHistoryUseCase {
     String? searchId,
     int page = 0,
     int pageSize = 20,
+    SaleSort sortBy = SaleSort.date,
+    bool ascending = false,
   }) =>
       _repository.getSalesHistory(
         dateFrom: dateFrom,
@@ -110,6 +112,8 @@ class GetSalesHistoryUseCase {
         searchId: searchId,
         page: page,
         pageSize: pageSize,
+        sortBy: sortBy,
+        ascending: ascending,
       );
 }
 

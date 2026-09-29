@@ -291,7 +291,7 @@ class PreviewCashRegisterRepository implements CashRegisterRepository {
 
 const _methods = ['efectivo', 'efectivo', 'transferencia', 'mixto', 'efectivo'];
 
-final previewSales = List<Sale>.generate(24, (i) {
+final previewSales = List<Sale>.generate(70, (i) {
   final method = _methods[i % _methods.length];
   final total = 4800.0 + (i * 7300) % 68000;
   final cashier = _cashiers[i % 2];
@@ -327,13 +327,26 @@ class PreviewSaleRepository implements SaleRepository {
     String? searchId,
     int page = 0,
     int pageSize = 20,
+    SaleSort sortBy = SaleSort.date,
+    bool ascending = false,
   }) async {
     final list = previewSales.where((s) {
       if (cashierId != null && s.cashierId != cashierId) return false;
       if (paymentMethod != null && s.paymentMethod != paymentMethod) return false;
       if (searchId != null && s.id != searchId) return false;
+      if (minAmount != null && s.total < minAmount) return false;
+      if (maxAmount != null && s.total > maxAmount) return false;
       return true;
     }).toList();
+    Comparable key(Sale s) => switch (sortBy) {
+          SaleSort.date => s.createdAt,
+          SaleSort.total => s.total,
+          SaleSort.paymentMethod => s.paymentMethod,
+        };
+    list.sort((a, b) {
+      final c = key(a).compareTo(key(b));
+      return c != 0 ? (ascending ? c : -c) : b.createdAt.compareTo(a.createdAt);
+    });
     return (sales: _page(list, page, pageSize), failure: null);
   }
 
