@@ -111,12 +111,15 @@ El código heredado navega con menú lateral desplegable en el panel de administ
 | USB-013 | Como usuario quiero una interfaz con densidad de escritorio para ver más información sin desplazarme. | Espaciados, tipografía y alturas de fila ajustados para mouse. Estados de hover en filas y botones. Cursor correcto en elementos interactivos. Las cuadrículas de tarjetas usan el ancho en lugar de fijar dos columnas. | Media | 5 | AM/CAJ |
 | USB-038 | Como AdminMaster quiero que un cajero no pueda entrar a las pantallas de administración escribiendo la dirección a mano. | El router valida el rol en cada ruta bajo `/admin`, no solo al iniciar sesión. Un cajero que navegue a mano termina en su propia pantalla, no en una vista vacía ni en un error. Las políticas RLS siguen siendo la defensa de fondo. | Alta | 3 | AM |
 | USB-039 | Como Cajero quiero que el sistema no pierda mi turno a media tarde ni me deje abrir dos cajas, para no tener que justificar descuadres que no existen. | `getActiveRegister` deja de filtrar por fecha (la pregunta es "¿tiene una caja sin cerrar?", no "¿abrió hoy?") e incluye `closing` para retomar cierres a medias. Índice único parcial que impide dos cajas sin cerrar por cajero. Se borran las dos sobrecargas de `confirm_sale` y queda una sola. Verificado contra el Supabase real. | Alta | 5 | CAJ |
+| USB-042 | Como usuario quiero que el encabezado de cada pantalla se vea de escritorio para encontrar las acciones sin adivinar qué hace cada ícono. | Título alineado a la izquierda, del mismo alto que el bloque del logo de la barra lateral. En escritorio las acciones son botones con texto y la acción principal (antes un botón flotante) va en el encabezado. En ventanas angostas se conservan los íconos con su nombre al pasar el mouse. | Media | 3 | AM/CAJ |
 
-**Total: 37 SP**
+**Total: 40 SP**
 
 > `USB-038` se agregó en la v1.1. El router heredado de la versión móvil solo valida autenticación, porque en un celular no hay barra de direcciones donde escribir una ruta. En web sí la hay.
 >
 > `USB-039` se agregó en la v1.2 tras auditar los planes: son defectos que el port copió de Sistema AS antes de que allá estuvieran diagnosticados. Van primero en SB-03, antes de cualquier trabajo de interfaz.
+>
+> `USB-042` se agregó en la v1.3, al recorrer las pantallas con sesión iniciada: SB-03 cambió la navegación, pero cada pantalla seguía con el encabezado de celular (título centrado, acciones como íconos sueltos).
 
 ---
 

@@ -89,9 +89,14 @@ abstract class AppTheme {
       scaffoldBackgroundColor: AppColors.surface,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceCard,
+        backgroundColor: AppColors.surface,
         elevation: 0,
-        centerTitle: true,
+        // Sin esto Material 3 tiñe de verde (surfaceTint) el encabezado
+        // cuando la lista pasa por debajo.
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: AppColors.border)),
+        centerTitle: false,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary,

@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../users/presentation/providers/users_providers.dart';
 import '../../domain/entities/expense.dart';
@@ -38,18 +39,18 @@ class ExpensesReportAdminPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Gastos'),
+      appBar: AppPageBar(
+        title: 'Gastos',
         actions: [
-          IconButton(
-            tooltip: 'Categorías',
-            icon: const Icon(Icons.category_outlined),
-            onPressed: () => context.push('/admin/expenses/categories'),
-          ),
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.ios_share_rounded),
+          PageAction(
+            icon: Icons.ios_share_rounded,
+            label: 'Exportar CSV',
             onPressed: state.expenses.isEmpty ? null : () => _exportCsv(state.expenses, cashierNames),
+          ),
+          PageAction(
+            icon: Icons.category_outlined,
+            label: 'Categorías',
+            onPressed: () => context.push('/admin/expenses/categories'),
           ),
         ],
       ),

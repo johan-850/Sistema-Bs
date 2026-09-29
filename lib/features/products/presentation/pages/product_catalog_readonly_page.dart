@@ -7,12 +7,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/product_list_card.dart';
 import '../providers/product_providers.dart';
@@ -53,19 +53,13 @@ class _ProductCatalogReadonlyPageState
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Catálogo'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
+      appBar: AppPageBar(
+        title: 'Catálogo',
         actions: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: state.filterCategory != null,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.category_outlined),
-            ),
+          PageAction(
+            icon: Icons.category_outlined,
+            label: state.filterCategory ?? 'Categoría',
+            highlighted: state.filterCategory != null,
             onPressed: () => _showCategorySheet(context, notifier, state),
           ),
         ],

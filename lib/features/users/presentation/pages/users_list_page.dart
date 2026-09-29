@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:share_plus/share_plus.dart';
 import 'dart:typed_data';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
@@ -34,19 +35,18 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestión de Cajeros'),
+      appBar: AppPageBar(
+        title: 'Cajeros',
         actions: [
-          // ── Exportar CSV ────────────────────────────────
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.download_rounded),
+          PageAction(
+            icon: Icons.download_rounded,
+            label: 'Exportar CSV',
             onPressed: () => _exportCSV(context),
           ),
-          // ── Crear cajero ─────────────────────────────────
-          IconButton(
-            tooltip: 'Nuevo cajero',
-            icon: const Icon(Icons.person_add_rounded),
+          PageAction(
+            icon: Icons.person_add_rounded,
+            label: 'Nuevo cajero',
+            primary: true,
             onPressed: () async {
               await context.push('/admin/users/create');
               ref.read(cashierListProvider.notifier).load(filterActive: _filterActive);

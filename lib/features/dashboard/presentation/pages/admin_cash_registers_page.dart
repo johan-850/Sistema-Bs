@@ -12,6 +12,7 @@ import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../cash_register/domain/entities/cash_register.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
@@ -38,14 +39,12 @@ class _AdminCashRegistersPageState
     final notifier = ref.read(registerHistoryProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historial de Cajas'),
-        centerTitle: true,
+      appBar: AppPageBar(
+        title: 'Historial de cajas',
         actions: [
-          // Botón de filtros
-          IconButton(
-            tooltip: 'Filtrar',
-            icon: const Icon(Icons.filter_list_rounded),
+          PageAction(
+            icon: Icons.filter_list_rounded,
+            label: 'Filtrar',
             onPressed: () => _showFilterSheet(context, notifier),
           ),
         ],

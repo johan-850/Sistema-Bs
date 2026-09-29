@@ -12,6 +12,7 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../products/domain/entities/product.dart';
@@ -31,12 +32,12 @@ class RestockListPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Lista de Restock'),
+      appBar: AppPageBar(
+        title: 'Lista de restock',
         actions: [
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.download_rounded),
+          PageAction(
+            icon: Icons.download_rounded,
+            label: 'Exportar CSV',
             onPressed: () => _exportCSV(context, state.lowStockProducts),
           ),
         ],

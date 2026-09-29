@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
 import '../../../../core/router/app_routes.dart';
@@ -354,7 +355,7 @@ class _NoOpenRegisterScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(title: const Text('Punto de Venta')),
+      appBar: const AppPageBar(title: 'Punto de venta'),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),

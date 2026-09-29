@@ -7,6 +7,7 @@ import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../router/nav_destinations.dart';
 import '../theme/app_theme.dart';
 import '../theme/breakpoints.dart';
+import 'app_page_bar.dart';
 
 /// Barra lateral persistente. Por debajo de `expanded` se colapsa a íconos
 /// y no a un Drawer: el AppBar de cada página no alcanza un Drawer exterior.
@@ -110,11 +111,14 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const logo = Icon(Icons.storefront_rounded, color: AppColors.primary, size: 28);
+    // Misma altura que el encabezado de las páginas: las dos líneas
+    // divisorias quedan a la misma altura de lado a lado.
     if (!extended) {
-      return const SizedBox(height: 72, child: Center(child: logo));
+      return const SizedBox(height: AppPageBar.height, child: Center(child: logo));
     }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 16),
+    return Container(
+      height: AppPageBar.height,
+      padding: const EdgeInsets.fromLTRB(20, 0, 16, 0),
       child: Row(
         children: [
           logo,

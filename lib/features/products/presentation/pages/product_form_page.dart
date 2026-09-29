@@ -20,6 +20,7 @@ import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
@@ -151,22 +152,20 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(_isEditMode ? 'Editar Producto' : 'Nuevo Producto'),
+      appBar: AppPageBar(
+        title: _isEditMode ? 'Editar producto' : 'Nuevo producto',
+        subtitle: _isEditMode ? _existingProduct?.name : null,
         leading: IconButton(
+          tooltip: 'Volver a productos',
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/admin/products'),
         ),
         actions: [
           // US-016: Toggle activo/inactivo (solo en modo edición)
           if (_isEditMode && _existingProduct != null)
-            IconButton(
-              icon: Icon(
-                _isActive ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
-                size: 32,
-                color: _isActive ? AppColors.success : AppColors.error,
-              ),
-              tooltip: _isActive ? 'Desactivar producto' : 'Reactivar producto',
+            PageAction(
+              icon: _isActive ? Icons.toggle_off_rounded : Icons.toggle_on_rounded,
+              label: _isActive ? 'Desactivar producto' : 'Reactivar producto',
               onPressed: _confirmToggleStatus,
             ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../pos/presentation/providers/sales_history_providers.dart';
 import '../../../../core/utils/receipt_pdf.dart' show paymentMethodLabel;
@@ -15,7 +16,7 @@ class AdminDashboardPage extends ConsumerWidget {
     final user = ref.watch(authStateStreamProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: const AppPageBar(title: 'Dashboard'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

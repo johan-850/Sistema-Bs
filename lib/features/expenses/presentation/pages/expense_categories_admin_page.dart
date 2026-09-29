@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/breakpoints.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/utils/expense_category_icons.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
@@ -24,7 +26,18 @@ class ExpenseCategoriesAdminPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(title: const Text('Categorías de gasto')),
+      appBar: AppPageBar(
+        title: 'Categorías de gasto',
+        actions: [
+          if (!context.isCompact)
+            PageAction(
+              icon: Icons.add_rounded,
+              label: 'Nueva categoría',
+              primary: true,
+              onPressed: () => _openForm(context, ref),
+            ),
+        ],
+      ),
       body: state.isLoading && state.categories.isEmpty
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
@@ -43,11 +56,13 @@ class ExpenseCategoriesAdminPage extends ConsumerWidget {
                 },
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openForm(context, ref),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Nueva categoría'),
-      ),
+      floatingActionButton: context.isCompact
+          ? FloatingActionButton.extended(
+              onPressed: () => _openForm(context, ref),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Nueva categoría'),
+            )
+          : null,
     );
   }
 

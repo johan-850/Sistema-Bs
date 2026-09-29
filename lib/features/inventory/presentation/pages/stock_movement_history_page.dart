@@ -15,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../products/domain/entities/product.dart';
 import '../../../products/presentation/providers/product_providers.dart' show productRepositoryProvider;
@@ -65,21 +66,20 @@ class _StockMovementHistoryPageState extends ConsumerState<StockMovementHistoryP
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(_product?.name ?? 'Historial de movimientos'),
+      appBar: AppPageBar(
+        title: _product?.name ?? 'Historial de movimientos',
+        subtitle: _product == null ? null : 'Historial de movimientos',
         actions: [
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.download_rounded),
-            onPressed: () => _exportCSV(context, state.movements),
-          ),
-          IconButton(
-            icon: Badge(
-              isLabelVisible: state.hasDateFilter,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.date_range_rounded),
-            ),
+          PageAction(
+            icon: Icons.date_range_rounded,
+            label: 'Fechas',
+            highlighted: state.hasDateFilter,
             onPressed: () => _showDateFilterSheet(context, notifier, state),
+          ),
+          PageAction(
+            icon: Icons.download_rounded,
+            label: 'Exportar CSV',
+            onPressed: () => _exportCSV(context, state.movements),
           ),
         ],
       ),

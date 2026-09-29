@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../providers/product_providers.dart';
@@ -42,9 +43,11 @@ class ProductCsvImportPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Importar Productos (CSV)'),
+      appBar: AppPageBar(
+        title: 'Importar productos',
+        subtitle: 'Desde un archivo CSV',
         leading: IconButton(
+          tooltip: 'Volver a productos',
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.go('/admin/products'),
         ),

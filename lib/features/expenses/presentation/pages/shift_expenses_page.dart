@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/breakpoints.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
 import '../../../settings/presentation/providers/store_settings_providers.dart';
@@ -21,10 +23,24 @@ class ShiftExpensesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final registerAsync = ref.watch(activeRegisterProvider);
+    final openRegister = registerAsync.valueOrNull?.isOpen == true ? registerAsync.value : null;
+    void newExpense() =>
+        RegisterExpenseSheet.show(context, cashRegisterId: openRegister!.id);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(title: const Text('Gastos del turno')),
+      appBar: AppPageBar(
+        title: 'Gastos del turno',
+        actions: [
+          if (openRegister != null && !context.isCompact)
+            PageAction(
+              icon: Icons.add_rounded,
+              label: 'Nuevo gasto',
+              primary: true,
+              onPressed: newExpense,
+            ),
+        ],
+      ),
       body: registerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (_, _) => const Center(
@@ -39,12 +55,9 @@ class ShiftExpensesPage extends ConsumerWidget {
           return _ShiftExpensesList(cashRegisterId: register.id);
         },
       ),
-      floatingActionButton: registerAsync.valueOrNull?.isOpen == true
+      floatingActionButton: openRegister != null && context.isCompact
           ? FloatingActionButton.extended(
-              onPressed: () => RegisterExpenseSheet.show(
-                context,
-                cashRegisterId: registerAsync.value!.id,
-              ),
+              onPressed: newExpense,
               icon: const Icon(Icons.add_rounded),
               label: const Text('Nuevo gasto'),
             )

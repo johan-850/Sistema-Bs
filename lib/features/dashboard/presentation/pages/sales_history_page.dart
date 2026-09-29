@@ -18,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
@@ -60,17 +61,17 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Historial de ventas'),
+      appBar: AppPageBar(
+        title: 'Historial de ventas',
         actions: [
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.ios_share_rounded),
+          PageAction(
+            icon: Icons.ios_share_rounded,
+            label: 'Exportar CSV',
             onPressed: state.sales.isEmpty ? null : () => _exportCsv(state.sales, cashierNames),
           ),
-          IconButton(
-            tooltip: 'Exportar PDF',
-            icon: const Icon(Icons.picture_as_pdf_outlined),
+          PageAction(
+            icon: Icons.picture_as_pdf_outlined,
+            label: 'Exportar PDF',
             onPressed: state.sales.isEmpty ? null : () => _exportPdf(state.sales, cashierNames, currencyFmt),
           ),
         ],

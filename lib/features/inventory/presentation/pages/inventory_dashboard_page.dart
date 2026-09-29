@@ -16,6 +16,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/product_list_card.dart';
 import '../../../products/domain/entities/product.dart';
@@ -60,26 +61,24 @@ class _InventoryDashboardPageState
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Inventario'),
+      appBar: AppPageBar(
+        title: 'Inventario',
         actions: [
-          IconButton(
-            tooltip: 'Lista de restock',
-            icon: const Icon(Icons.playlist_add_check_rounded),
-            onPressed: () => context.push('/admin/inventory/restock'),
+          PageAction(
+            icon: Icons.filter_list_rounded,
+            label: 'Filtrar',
+            highlighted: state.filterStockAlert != StockAlertFilter.all,
+            onPressed: () => _showAlertFilterSheet(context, notifier, state),
           ),
-          IconButton(
-            tooltip: 'Exportar CSV',
-            icon: const Icon(Icons.download_rounded),
+          PageAction(
+            icon: Icons.download_rounded,
+            label: 'Exportar CSV',
             onPressed: () => _exportCSV(context, state.products),
           ),
-          IconButton(
-            icon: Badge(
-              isLabelVisible: state.filterStockAlert != StockAlertFilter.all,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.filter_list_rounded),
-            ),
-            onPressed: () => _showAlertFilterSheet(context, notifier, state),
+          PageAction(
+            icon: Icons.playlist_add_check_rounded,
+            label: 'Lista de restock',
+            onPressed: () => context.push('/admin/inventory/restock'),
           ),
         ],
       ),

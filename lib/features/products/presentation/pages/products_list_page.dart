@@ -11,7 +11,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/product_list_card.dart';
@@ -52,39 +54,38 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: const Text('Inventario'),
+      appBar: AppPageBar(
+        title: 'Productos',
         actions: [
-          // US-019: Importar productos desde CSV
-          IconButton(
-            tooltip: 'Importar CSV',
-            icon: const Icon(Icons.upload_file_rounded),
-            onPressed: () => context.push('/admin/products/import'),
-          ),
-          // Botón de filtros (categoría + alerta de stock — US-017)
-          IconButton(
-            icon: Badge(
-              isLabelVisible:
-                  state.filterCategory != null ||
-                  state.filterStockAlert != StockAlertFilter.all,
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.filter_list_rounded),
-            ),
+          // Filtros de categoría + alerta de stock — US-017
+          PageAction(
+            icon: Icons.filter_list_rounded,
+            label: 'Filtrar',
+            highlighted: state.filterCategory != null ||
+                state.filterStockAlert != StockAlertFilter.all,
             onPressed: () => _showFilterSheet(context, notifier, state),
           ),
-          // Toggle productos inactivos
-          IconButton(
-            icon: Icon(
-              state.showInactive
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded,
-              color: state.showInactive ? AppColors.warning : null,
-            ),
-            tooltip: state.showInactive
-                ? 'Ocultar inactivos'
-                : 'Mostrar inactivos',
+          PageAction(
+            icon: state.showInactive
+                ? Icons.visibility_off_rounded
+                : Icons.visibility_rounded,
+            label: state.showInactive ? 'Ocultar inactivos' : 'Mostrar inactivos',
+            highlighted: state.showInactive,
             onPressed: () => notifier.toggleShowInactive(),
           ),
+          // US-019: Importar productos desde CSV
+          PageAction(
+            icon: Icons.upload_file_rounded,
+            label: 'Importar CSV',
+            onPressed: () => context.push('/admin/products/import'),
+          ),
+          if (!context.isCompact)
+            PageAction(
+              icon: Icons.add_rounded,
+              label: 'Nuevo producto',
+              primary: true,
+              onPressed: () => context.go('/admin/products/new'),
+            ),
         ],
       ),
       body: Column(
@@ -152,14 +153,16 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
         ],
       ),
 
-      // ── FAB: Crear producto ─────────────────────────────────
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/admin/products/new'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Nuevo Producto'),
-      ),
+      // ── FAB: Crear producto (en escritorio va en el encabezado) ──
+      floatingActionButton: context.isCompact
+          ? FloatingActionButton.extended(
+              onPressed: () => context.go('/admin/products/new'),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Nuevo Producto'),
+            )
+          : null,
     );
   }
 

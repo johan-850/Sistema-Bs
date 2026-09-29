@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/receipt_pdf.dart';
@@ -29,7 +30,10 @@ class SaleDetailPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(title: Text('Venta #${saleId.substring(0, 8)}')),
+      appBar: AppPageBar(
+        title: 'Venta #${saleId.substring(0, 8)}',
+        subtitle: 'Detalle de la venta',
+      ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (_, _) => const Center(

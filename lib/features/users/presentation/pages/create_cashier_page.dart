@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -56,7 +57,7 @@ class _CreateCashierPageState extends ConsumerState<CreateCashierPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo Cajero')),
+      appBar: const AppPageBar(title: 'Nuevo cajero'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: ReadableWidth(maxWidth: 560, child: Form(

@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../pos/domain/repositories/sale_repository.dart';
 import '../../../pos/presentation/providers/statistics_providers.dart';
@@ -42,7 +43,7 @@ class SalesStatisticsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(title: const Text('Estadísticas')),
+      appBar: const AppPageBar(title: 'Estadísticas'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

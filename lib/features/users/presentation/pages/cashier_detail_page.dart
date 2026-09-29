@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -22,13 +23,13 @@ class CashierDetailPage extends ConsumerWidget {
 
     if (cashier == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detalle Cajero')),
+        appBar: const AppPageBar(title: 'Detalle del cajero'),
         body: const Center(child: Text('Cajero no encontrado')),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(cashier.name)),
+      appBar: AppPageBar(title: cashier.name, subtitle: cashier.email),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: ReadableWidth(child: Column(

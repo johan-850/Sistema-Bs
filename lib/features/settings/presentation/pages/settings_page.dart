@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -21,7 +22,7 @@ class SettingsPage extends ConsumerWidget {
     final user = ref.watch(authStateStreamProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Configuración')),
+      appBar: const AppPageBar(title: 'Configuración'),
       body: ReadableListView(
         padding: const EdgeInsets.all(16),
         children: [
