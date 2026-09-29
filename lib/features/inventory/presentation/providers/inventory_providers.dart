@@ -15,6 +15,7 @@ import '../../domain/repositories/inventory_repository.dart';
 import '../../domain/use_cases/inventory_use_cases.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../products/domain/entities/product.dart';
+import '../../../products/domain/repositories/product_repository.dart' show ProductSort;
 import '../../../products/domain/use_cases/product_use_cases.dart';
 import '../../../products/presentation/providers/product_providers.dart'
     show getProductsUseCaseProvider, StockAlertFilter;
@@ -55,12 +56,26 @@ class InventoryListState {
   final String? searchQuery;
   final StockAlertFilter filterStockAlert;
 
+  // USB-020: conteos del catálogo buscado, antes del filtro de alerta.
+  final int totalCount;
+  final int lowCount;
+  final int outCount;
+
+  // USB-020: orden de la tabla, en memoria (el catálogo ya está completo).
+  final ProductSort sortBy;
+  final bool ascending;
+
   const InventoryListState({
     this.products = const [],
     this.isLoading = false,
     this.failure,
     this.searchQuery,
     this.filterStockAlert = StockAlertFilter.all,
+    this.totalCount = 0,
+    this.lowCount = 0,
+    this.outCount = 0,
+    this.sortBy = ProductSort.name,
+    this.ascending = true,
   });
 
   bool get hasActiveFilters =>
@@ -73,6 +88,11 @@ class InventoryListState {
     Failure? failure,
     String? searchQuery,
     StockAlertFilter? filterStockAlert,
+    int? totalCount,
+    int? lowCount,
+    int? outCount,
+    ProductSort? sortBy,
+    bool? ascending,
     bool clearFailure = false,
   }) =>
       InventoryListState(
@@ -81,12 +101,49 @@ class InventoryListState {
         failure: clearFailure ? null : (failure ?? this.failure),
         searchQuery: searchQuery ?? this.searchQuery,
         filterStockAlert: filterStockAlert ?? this.filterStockAlert,
+        totalCount: totalCount ?? this.totalCount,
+        lowCount: lowCount ?? this.lowCount,
+        outCount: outCount ?? this.outCount,
+        sortBy: sortBy ?? this.sortBy,
+        ascending: ascending ?? this.ascending,
       );
+}
+
+/// USB-020: filtra por alerta y ordena el catálogo ya cargado. Los
+/// empates se resuelven por nombre, así el orden no salta al refrescar.
+List<Product> inventoryView(
+  List<Product> all, {
+  required StockAlertFilter filter,
+  required ProductSort sortBy,
+  required bool ascending,
+}) {
+  final filtered = switch (filter) {
+    StockAlertFilter.all => [...all],
+    StockAlertFilter.low => all.where((p) => p.isLowStock && !p.isOutOfStock).toList(),
+    StockAlertFilter.outOfStock => all.where((p) => p.isOutOfStock).toList(),
+  };
+  Comparable key(Product p) => switch (sortBy) {
+        ProductSort.name => p.name.toLowerCase(),
+        ProductSort.category => p.category,
+        ProductSort.price => p.price,
+        ProductSort.costPrice => p.costPrice,
+        ProductSort.stock => p.stock,
+      };
+  filtered.sort((a, b) {
+    final c = key(a).compareTo(key(b));
+    if (c != 0) return ascending ? c : -c;
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return filtered;
 }
 
 class InventoryListNotifier extends StateNotifier<InventoryListState> {
   final GetProductsUseCase _getProducts;
   StreamSubscription<List<Map<String, dynamic>>>? _realtimeSub;
+
+  /// Catálogo buscado completo; [state.products] es su vista filtrada y
+  /// ordenada.
+  List<Product> _all = const [];
 
   InventoryListNotifier(this._getProducts, SupabaseClient client)
       : super(const InventoryListState()) {
@@ -98,30 +155,50 @@ class InventoryListNotifier extends StateNotifier<InventoryListState> {
     });
   }
 
-  /// Trae todo el catálogo activo (sin paginación de UI: el dashboard
-  /// necesita verlo completo para el semáforo, no navegarlo página a
-  /// página) y aplica el filtro de alerta client-side.
+  static const _chunk = 500;
+
+  /// Trae todo el catálogo activo (sin paginación de UI: el semáforo y el
+  /// filtro de alerta solo son ciertos sobre el catálogo completo) y
+  /// aplica el filtro y el orden en el cliente. Va por tandas: antes pedía
+  /// una sola página de 200 y lo que pasara de ahí no aparecía.
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearFailure: true);
 
-    final result = await _getProducts(
-      query: state.searchQuery,
-      activeOnly: true,
-      pageSize: 200,
-    );
-
-    if (result.failure != null) {
-      state = state.copyWith(isLoading: false, failure: result.failure);
-      return;
+    final all = <Product>[];
+    for (var page = 0;; page++) {
+      final result = await _getProducts(
+        query: state.searchQuery,
+        activeOnly: true,
+        page: page,
+        pageSize: _chunk,
+      );
+      if (result.failure != null) {
+        state = state.copyWith(isLoading: false, failure: result.failure);
+        return;
+      }
+      all.addAll(result.products);
+      if (result.products.length < _chunk) break;
     }
 
-    final filtered = switch (state.filterStockAlert) {
-      StockAlertFilter.all => result.products,
-      StockAlertFilter.low =>
-        result.products.where((p) => p.isLowStock && !p.isOutOfStock).toList(),
-      StockAlertFilter.outOfStock => result.products.where((p) => p.isOutOfStock).toList(),
-    };
-    state = state.copyWith(isLoading: false, products: filtered);
+    _all = all;
+    state = state.copyWith(
+      isLoading: false,
+      totalCount: all.length,
+      lowCount: all.where((p) => p.isLowStock && !p.isOutOfStock).length,
+      outCount: all.where((p) => p.isOutOfStock).length,
+    );
+    _applyView();
+  }
+
+  void _applyView() {
+    state = state.copyWith(
+      products: inventoryView(
+        _all,
+        filter: state.filterStockAlert,
+        sortBy: state.sortBy,
+        ascending: state.ascending,
+      ),
+    );
   }
 
   Future<void> search(String query) async {
@@ -129,9 +206,19 @@ class InventoryListNotifier extends StateNotifier<InventoryListState> {
     await load();
   }
 
-  Future<void> filterByStockAlert(StockAlertFilter filter) async {
+  /// El filtro de alerta no vuelve al servidor: el catálogo ya está.
+  void filterByStockAlert(StockAlertFilter filter) {
     state = state.copyWith(filterStockAlert: filter);
-    await load();
+    _applyView();
+  }
+
+  /// USB-020: ordena por [column]; si ya era esa columna, invierte.
+  void sort(ProductSort column) {
+    state = state.copyWith(
+      sortBy: column,
+      ascending: state.sortBy == column ? !state.ascending : true,
+    );
+    _applyView();
   }
 
   @override
