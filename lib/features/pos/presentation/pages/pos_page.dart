@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/scan_feedback_providers.dart';
@@ -20,7 +21,6 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/product_thumbnail.dart';
 import '../../../../core/widgets/barcode_scanner_page.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../cash_register/domain/entities/cash_register.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
 import '../../../products/domain/entities/product.dart';
@@ -29,6 +29,7 @@ import '../../../products/presentation/providers/product_providers.dart'
 import '../providers/cart_providers.dart';
 import '../providers/checkout_provider.dart' show logLowStockAlertUseCaseProvider;
 import '../providers/pos_catalog_provider.dart';
+import '../widgets/cart_panel.dart';
 
 class PosPage extends ConsumerStatefulWidget {
   const PosPage({super.key});
@@ -72,7 +73,6 @@ class _PosPageState extends ConsumerState<PosPage> {
   }
 
   Widget _buildPos(BuildContext context, CashRegister register) {
-    final user = ref.watch(authStateStreamProvider).valueOrNull;
     final catalogState = ref.watch(posCatalogProvider);
     final catalogNotifier = ref.read(posCatalogProvider.notifier);
     final cartState = ref.watch(cartProvider);
@@ -96,136 +96,174 @@ class _PosPageState extends ConsumerState<PosPage> {
       }
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-              child: Text(
-                _initials(user?.name ?? ''),
-                style: const TextStyle(
-                    color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12),
+    // USB-014: en escritorio el carrito queda siempre a la vista, al lado
+    // del catálogo; en compacto sigue siendo una pantalla aparte.
+    final compact = context.isCompact;
+    int inCart(Product p) => cartState.items
+        .where((item) => item.productId == p.id)
+        .fold(0, (sum, item) => sum + item.quantity);
+    void add(Product p) => ref.read(cartProvider.notifier).addProduct(p);
+
+    final chips = [
+      _CategoryChip(
+        label: 'Todos',
+        selected: catalogState.filterCategory == null,
+        onTap: () => catalogNotifier.filterByCategory(null),
+      ),
+      for (final cat in AppConstants.productCategories)
+        _CategoryChip(
+          label: cat,
+          selected: catalogState.filterCategory == cat,
+          onTap: () => catalogNotifier.filterByCategory(cat),
+        ),
+    ];
+
+    final Widget products;
+    if (catalogState.isLoading) {
+      products = const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    } else if (catalogState.products.isEmpty) {
+      products = const Center(
+        child: Text('Sin resultados', style: TextStyle(color: AppColors.textSecondary)),
+      );
+    } else if (compact) {
+      products = ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        itemCount: catalogState.products.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          final p = catalogState.products[i];
+          return _VentaProductTile(
+            product: p,
+            quantityInCart: inCart(p),
+            priceFmt: _priceFmt,
+            onAdd: () => add(p),
+          );
+        },
+      );
+    } else {
+      products = GridView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 210,
+          mainAxisExtent: 136,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: catalogState.products.length,
+        itemBuilder: (context, i) {
+          final p = catalogState.products[i];
+          return _ProductGridCard(
+            product: p,
+            quantityInCart: inCart(p),
+            priceFmt: _priceFmt,
+            onAdd: () => add(p),
+          );
+        },
+      );
+    }
+
+    final catalog = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Buscador ──
+        Padding(
+          padding: compact
+              ? const EdgeInsets.fromLTRB(16, 12, 16, 8)
+              : const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: TextField(
+            controller: _searchController,
+            onChanged: catalogNotifier.search,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Buscar producto o código...',
+              hintStyle: const TextStyle(color: AppColors.textDisabled),
+              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
+              suffixIcon: compact
+                  ? IconButton(
+                      tooltip: 'Carrito',
+                      icon: Badge(
+                        isLabelVisible: cartState.totalItems > 0,
+                        label: Text('${cartState.totalItems}'),
+                        backgroundColor: AppColors.primary,
+                        textColor: Colors.black,
+                        child: const Icon(Icons.shopping_cart_outlined, color: AppColors.textSecondary),
+                      ),
+                      onPressed: () => context.go(AppRoutes.cart),
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppColors.surfaceElevated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
               ),
             ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text('CAJA PRINCIPAL', style: TextStyle(fontSize: 15, letterSpacing: 0.5)),
-            ),
-          ],
+          ),
         ),
+
+        // ── Chips de categoría ──
+        // Con mouse una fila horizontal no se puede desplazar con la
+        // rueda, así que en escritorio las categorías bajan de línea.
+        if (compact)
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: chips.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (_, i) => Center(child: chips[i]),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Wrap(spacing: 8, runSpacing: 8, children: chips),
+          ),
+        SizedBox(height: compact ? 8 : 16),
+
+        // ── Productos ──
+        Expanded(child: products),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppPageBar(
+        title: 'Punto de venta',
+        subtitle: 'Caja principal · turno desde '
+            '${DateFormat('h:mm a', 'es').format(register.openingTime.toLocal())}',
+        automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            tooltip: 'Escanear',
-            icon: const Icon(Icons.qr_code_scanner_rounded),
+          PageAction(
+            icon: Icons.qr_code_scanner_rounded,
+            label: 'Escanear',
             onPressed: _scanAndAdd,
           ),
-          IconButton(
-            tooltip: 'Info del turno',
-            icon: const Icon(Icons.access_time_rounded),
+          PageAction(
+            icon: Icons.access_time_rounded,
+            label: 'Turno',
             onPressed: () => _showShiftInfo(context, register),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // ── Buscador ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              onChanged: catalogNotifier.search,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Buscar producto o código...',
-                hintStyle: const TextStyle(color: AppColors.textDisabled),
-                prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
-                suffixIcon: IconButton(
-                  tooltip: 'Carrito',
-                  icon: Badge(
-                    isLabelVisible: cartState.totalItems > 0,
-                    label: Text('${cartState.totalItems}'),
-                    backgroundColor: AppColors.primary,
-                    textColor: Colors.black,
-                    child: const Icon(Icons.shopping_cart_outlined, color: AppColors.textSecondary),
-                  ),
-                  onPressed: () => context.go(AppRoutes.cart),
-                ),
-                filled: true,
-                fillColor: AppColors.surfaceElevated,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-              ),
-            ),
-          ),
-
-          // ── Chips de categoría ──
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+      body: compact
+          ? catalog
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _CategoryChip(
-                  label: 'Todos',
-                  selected: catalogState.filterCategory == null,
-                  onTap: () => catalogNotifier.filterByCategory(null),
+                Expanded(child: catalog),
+                Container(
+                  width: context.isExpanded ? 400 : 340,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    border: Border(left: BorderSide(color: AppColors.border)),
+                  ),
+                  child: const CartPanel(showHeader: true),
                 ),
-                const SizedBox(width: 8),
-                ...AppConstants.productCategories.map((cat) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _CategoryChip(
-                        label: cat,
-                        selected: catalogState.filterCategory == cat,
-                        onTap: () => catalogNotifier.filterByCategory(cat),
-                      ),
-                    )),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-
-          // ── Listado de productos ──
-          Expanded(
-            child: catalogState.isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                : catalogState.products.isEmpty
-                    ? const Center(
-                        child: Text('Sin resultados', style: TextStyle(color: AppColors.textSecondary)),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        itemCount: catalogState.products.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, i) {
-                          final p = catalogState.products[i];
-                          final inCart = cartState.items
-                              .where((item) => item.productId == p.id)
-                              .fold(0, (sum, item) => sum + item.quantity);
-                          return _VentaProductTile(
-                            product: p,
-                            quantityInCart: inCart,
-                            priceFmt: _priceFmt,
-                            onAdd: () => ref.read(cartProvider.notifier).addProduct(p),
-                          );
-                        },
-                      ),
-          ),
-        ],
-      ),
     );
-  }
-
-  String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
   void _showShiftInfo(BuildContext context, CashRegister register) {
@@ -404,7 +442,8 @@ class _CategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: selected ? AppColors.primary : AppColors.border),
         ),
-        alignment: Alignment.center,
+        // Sin alignment: con él, dentro de un Wrap el chip ocupa todo el
+        // ancho disponible en vez de medir lo que su texto.
         child: Text(
           label.toUpperCase(),
           style: TextStyle(
@@ -412,6 +451,129 @@ class _CategoryChip extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tarjeta de producto en la cuadrícula (escritorio) ───────────
+
+/// Toda la tarjeta agrega el producto: con mouse no hace falta apuntarle
+/// a un botón chico, y el semáforo de stock es el mismo de la fila.
+class _ProductGridCard extends StatelessWidget {
+  final Product product;
+  final int quantityInCart;
+  final NumberFormat priceFmt;
+  final VoidCallback onAdd;
+
+  const _ProductGridCard({
+    required this.product,
+    required this.quantityInCart,
+    required this.priceFmt,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final remainingStock = product.stock - quantityInCart;
+    final outOfStock = remainingStock <= 0;
+    final tier = stockTierFor(remainingStock: remainingStock, minStock: product.minStock);
+    final radius = BorderRadius.circular(12);
+
+    return Tooltip(
+      message: outOfStock ? 'Agotado' : 'Agregar al carrito',
+      waitDuration: const Duration(milliseconds: 600),
+      child: HoverInkWell(
+        onTap: outOfStock ? null : onAdd,
+        borderRadius: radius,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: tier.backgroundTint ?? AppColors.surfaceCard,
+            borderRadius: radius,
+            border: Border.all(color: tier.accentColor, width: tier == StockTier.normal ? 1 : 1.5),
+          ),
+          child: Opacity(
+            opacity: outOfStock ? 0.55 : 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ProductThumbnail(imageUrl: product.imageUrl, size: 40),
+                    const Spacer(),
+                    if (quantityInCart > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '× $quantityInCart',
+                          style: const TextStyle(
+                              color: Colors.black, fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  product.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                    height: 1.25,
+                  ),
+                ),
+                const Spacer(),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${priceFmt.format(product.price)}\$',
+                      style: const TextStyle(
+                          color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                    const SizedBox(width: 8),
+                    // El precio nunca se recorta; el stock cede si no cabe.
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (tier != StockTier.normal && !outOfStock) ...[
+                            Icon(Icons.warning_rounded, size: 12, color: tier.accentColor),
+                            const SizedBox(width: 3),
+                          ],
+                          Flexible(
+                            child: Text(
+                              outOfStock ? 'Agotado' : '$remainingStock ${product.unit}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: tier == StockTier.normal
+                                    ? AppColors.textSecondary
+                                    : tier.accentColor,
+                                fontWeight: tier == StockTier.normal
+                                    ? FontWeight.normal
+                                    : FontWeight.bold,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -470,12 +632,16 @@ class _VentaProductTile extends StatelessWidget {
                       Icon(Icons.warning_rounded, size: 12, color: tier.accentColor),
                       const SizedBox(width: 3),
                     ],
-                    Text(
-                      outOfStock ? 'Agotado' : '$remainingStock ${product.unit} stock',
-                      style: TextStyle(
-                        color: tier == StockTier.normal ? AppColors.textSecondary : tier.accentColor,
-                        fontWeight: tier == StockTier.normal ? FontWeight.normal : FontWeight.bold,
-                        fontSize: 12,
+                    Flexible(
+                      child: Text(
+                        outOfStock ? 'Agotado' : '$remainingStock ${product.unit} stock',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: tier == StockTier.normal ? AppColors.textSecondary : tier.accentColor,
+                          fontWeight: tier == StockTier.normal ? FontWeight.normal : FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],

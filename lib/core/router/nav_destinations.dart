@@ -40,12 +40,15 @@ const _adminSections = [
   ]),
 ];
 
-List<NavSection> navSectionsFor(AppUser user) {
+/// [cartBesideCatalog]: el punto de venta ya muestra el carrito al lado
+/// del catálogo (fuera de compacto), así que un destino aparte sobra.
+List<NavSection> navSectionsFor(AppUser user, {bool cartBesideCatalog = false}) {
   if (user.isAdmin) return _adminSections;
   return [
     NavSection(null, [
       const NavDestination('Ventas', Icons.storefront_rounded, AppRoutes.pos),
-      const NavDestination('Carrito', Icons.shopping_cart_outlined, AppRoutes.cart),
+      if (!cartBesideCatalog)
+        const NavDestination('Carrito', Icons.shopping_cart_outlined, AppRoutes.cart),
       const NavDestination('Catálogo', Icons.inventory_2_outlined, AppRoutes.catalog),
       if (user.expensesEnabled)
         const NavDestination('Gastos', Icons.payments_outlined, AppRoutes.posExpenses),

@@ -34,6 +34,19 @@ void main() {
       expect(routes, [AppRoutes.pos, AppRoutes.cart, AppRoutes.catalog, AppRoutes.posExpenses]);
     });
 
+    test('con el carrito al lado del catálogo, Carrito no es un destino aparte', () {
+      final routes = [
+        for (final s in navSectionsFor(_user('cajero'), cartBesideCatalog: true))
+          for (final d in s.destinations) d.route,
+      ];
+      expect(routes, [AppRoutes.pos, AppRoutes.catalog, AppRoutes.posExpenses]);
+      // /pos/cart escrito a mano sigue marcando Ventas.
+      final destinations = [
+        for (final s in navSectionsFor(_user('cajero'), cartBesideCatalog: true)) ...s.destinations,
+      ];
+      expect(selectedRoute('/pos/cart', destinations), AppRoutes.pos);
+    });
+
     test('sin el módulo de gastos habilitado, el cajero no ve Gastos', () {
       final routes = _routes(_user('cajero', expensesEnabled: false));
       expect(routes, isNot(contains(AppRoutes.posExpenses)));

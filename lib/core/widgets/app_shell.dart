@@ -22,7 +22,7 @@ class AppShell extends ConsumerWidget {
     final user = ref.watch(authStateStreamProvider).valueOrNull;
     if (user == null) return child;
 
-    final sections = navSectionsFor(user);
+    final sections = navSectionsFor(user, cartBesideCatalog: !context.isCompact);
     final selected = selectedRoute(location, [
       for (final s in sections) ...s.destinations,
       navSettings,
