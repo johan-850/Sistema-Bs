@@ -109,7 +109,32 @@ final previewProducts = <Product>[
   _p(28, 'Cerveza Águila lata 330 ml', 'Licores', 3200, 96),
   _p(29, 'Aguardiente Antioqueño 375 ml', 'Licores', 29900, 5),
   _p(30, 'Dog Chow adulto 1 kg', 'Mascotas', 15900, 4),
+  // Variantes para que el listado tenga más de una página.
+  for (var i = 0; i < 48; i++)
+    _p(
+      31 + i,
+      '${_variantBases[i % _variantBases.length].$1} ${_variantSizes[i ~/ _variantBases.length]}',
+      _variantBases[i % _variantBases.length].$2,
+      1500.0 + (i * 1370) % 24000,
+      (i * 7) % 60,
+    ),
 ];
+
+const _variantBases = [
+  ('Galletas Saltín', 'Snacks y Dulces'),
+  ('Lenteja', 'Abarrotes'),
+  ('Gaseosa Postobón', 'Bebidas'),
+  ('Avena Alpina', 'Lácteos'),
+  ('Atún Van Camps', 'Abarrotes'),
+  ('Suavizante Suavitel', 'Limpieza'),
+  ('Champú Sedal', 'Cuidado Personal'),
+  ('Salchicha Zenú', 'Carnes y Embutidos'),
+  ('Arepa de maíz', 'Panadería'),
+  ('Papa criolla', 'Frutas y Verduras'),
+  ('Ron Medellín', 'Licores'),
+  ('Whiskas', 'Mascotas'),
+];
+const _variantSizes = ['pequeño', 'mediano', 'grande', 'familiar'];
 
 List<T> _page<T>(List<T> list, int page, int pageSize) {
   final start = page * pageSize;
@@ -125,6 +150,8 @@ class PreviewProductRepository implements ProductRepository {
     bool activeOnly = true,
     int page = 0,
     int pageSize = 20,
+    ProductSort sortBy = ProductSort.name,
+    bool ascending = true,
   }) async {
     final q = query?.toLowerCase();
     final list = previewProducts.where((p) {
@@ -137,6 +164,17 @@ class PreviewProductRepository implements ProductRepository {
       }
       return true;
     }).toList();
+    Comparable key(Product p) => switch (sortBy) {
+          ProductSort.name => p.name,
+          ProductSort.category => p.category,
+          ProductSort.price => p.price,
+          ProductSort.costPrice => p.costPrice,
+          ProductSort.stock => p.stock,
+        };
+    list.sort((a, b) {
+      final c = key(a).compareTo(key(b));
+      return c != 0 ? (ascending ? c : -c) : a.name.compareTo(b.name);
+    });
     return (products: _page(list, page, pageSize), failure: null);
   }
 

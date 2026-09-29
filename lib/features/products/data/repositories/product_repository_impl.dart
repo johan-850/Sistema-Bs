@@ -36,6 +36,8 @@ class ProductRepositoryImpl implements ProductRepository {
     bool activeOnly = true,
     int page = 0,
     int pageSize = 20,
+    ProductSort sortBy = ProductSort.name,
+    bool ascending = true,
   }) async {
     try {
       final products = await _datasource.getProducts(
@@ -44,6 +46,8 @@ class ProductRepositoryImpl implements ProductRepository {
         activeOnly: activeOnly,
         page: page,
         pageSize: pageSize,
+        sortBy: sortBy,
+        ascending: ascending,
       );
       return (products: products, failure: null);
     } catch (e) {

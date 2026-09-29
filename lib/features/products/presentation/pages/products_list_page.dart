@@ -15,8 +15,13 @@ import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/data_table_view.dart';
+import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/product_list_card.dart';
+import '../../../../core/widgets/product_thumbnail.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/repositories/product_repository.dart' show ProductSort;
 import '../providers/product_providers.dart';
 
 class ProductsListPage extends ConsumerStatefulWidget {
@@ -52,34 +57,64 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
       }
     });
 
+    final compact = context.isCompact;
+    void clearFilters() {
+      _searchController.clear();
+      notifier.clearFilters();
+    }
+
+    void openProduct(Product p) => context.go('/admin/products/edit/${p.id}');
+
+    final search = _SearchBar(
+      controller: _searchController,
+      onChanged: (q) => notifier.search(q),
+      onClear: () {
+        _searchController.clear();
+        notifier.search('');
+      },
+    );
+    final empty = _EmptyState(
+      hasFilters: state.hasActiveFilters,
+      onClearFilters: clearFilters,
+    );
+    final pager = TablePager(
+      page: state.currentPage,
+      hasNext: state.hasNextPage,
+      onPrevious: notifier.previousPage,
+      onNext: notifier.nextPage,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppPageBar(
         title: 'Productos',
         actions: [
-          // Filtros de categoría + alerta de stock — US-017
-          PageAction(
-            icon: Icons.filter_list_rounded,
-            label: 'Filtrar',
-            highlighted: state.filterCategory != null ||
-                state.filterStockAlert != StockAlertFilter.all,
-            onPressed: () => _showFilterSheet(context, notifier, state),
-          ),
-          PageAction(
-            icon: state.showInactive
-                ? Icons.visibility_off_rounded
-                : Icons.visibility_rounded,
-            label: state.showInactive ? 'Ocultar inactivos' : 'Mostrar inactivos',
-            highlighted: state.showInactive,
-            onPressed: () => notifier.toggleShowInactive(),
-          ),
+          // En escritorio los filtros están a la vista sobre la tabla.
+          if (compact) ...[
+            // Filtros de categoría + alerta de stock — US-017
+            PageAction(
+              icon: Icons.filter_list_rounded,
+              label: 'Filtrar',
+              highlighted: state.filterCategory != null ||
+                  state.filterStockAlert != StockAlertFilter.all,
+              onPressed: () => _showFilterSheet(context, notifier, state),
+            ),
+            PageAction(
+              icon: state.showInactive
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              label: state.showInactive ? 'Ocultar inactivos' : 'Mostrar inactivos',
+              highlighted: state.showInactive,
+              onPressed: () => notifier.toggleShowInactive(),
+            ),
+          ],
           // US-019: Importar productos desde CSV
           PageAction(
             icon: Icons.upload_file_rounded,
             label: 'Importar CSV',
             onPressed: () => context.push('/admin/products/import'),
           ),
-          if (!context.isCompact)
+          if (!compact)
             PageAction(
               icon: Icons.add_rounded,
               label: 'Nuevo producto',
@@ -88,70 +123,135 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // ── Barra de búsqueda ──────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: _SearchBar(
-              controller: _searchController,
-              onChanged: (q) => notifier.search(q),
-              onClear: () {
-                _searchController.clear();
-                notifier.search('');
-              },
-            ),
-          ),
+      body: compact
+          ? Column(
+              children: [
+                // ── Barra de búsqueda ──────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: search,
+                ),
 
-          // ── Indicador de filtros activos ─────────────────────
-          if (state.hasActiveFilters)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _ActiveFiltersChip(
-                category: state.filterCategory,
-                showInactive: state.showInactive,
-                stockAlert: state.filterStockAlert,
-                onClear: () {
-                  _searchController.clear();
-                  notifier.clearFilters();
-                },
-              ),
-            ),
-
-          // ── Lista de productos ──────────────────────────────
-          Expanded(
-            child: state.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
-                : state.products.isEmpty
-                ? _EmptyState(
-                    hasFilters: state.hasActiveFilters,
-                    onClearFilters: () {
-                      _searchController.clear();
-                      notifier.clearFilters();
-                    },
-                  )
-                : RefreshIndicator(
-                    color: AppColors.primary,
-                    onRefresh: () => notifier.refresh(),
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                      itemCount: state.products.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (context, i) => ProductListCard(
-                        product: state.products[i],
-                        currencyFmt: _currencyFmt,
-                        showInactiveBadge: true,
-                        onTap: () => context.go(
-                          '/admin/products/edit/${state.products[i].id}',
-                        ),
-                      ),
+                // ── Indicador de filtros activos ─────────────────────
+                if (state.hasActiveFilters)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _ActiveFiltersChip(
+                      category: state.filterCategory,
+                      showInactive: state.showInactive,
+                      stockAlert: state.filterStockAlert,
+                      onClear: clearFilters,
                     ),
                   ),
-          ),
-        ],
-      ),
+
+                // ── Lista de productos ──────────────────────────────
+                Expanded(
+                  child: state.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        )
+                      : state.products.isEmpty
+                      ? empty
+                      : RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: () => notifier.refresh(),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                            itemCount: state.products.length,
+                            separatorBuilder: (_, _) => const SizedBox(height: 10),
+                            itemBuilder: (context, i) => ProductListCard(
+                              product: state.products[i],
+                              currencyFmt: _currencyFmt,
+                              showInactiveBadge: true,
+                              onTap: () => openProduct(state.products[i]),
+                            ),
+                          ),
+                        ),
+                ),
+                if (state.currentPage > 0 || state.hasNextPage) pager,
+              ],
+            )
+          // ── USB-018: tabla de escritorio ───────────────────────
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: search),
+                      const SizedBox(width: 12),
+                      FilterDropdown<String?>(
+                        label: 'Categoría',
+                        value: state.filterCategory,
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('Todas las categorías')),
+                          for (final c in AppConstants.productCategories)
+                            DropdownMenuItem(value: c, child: Text(c)),
+                        ],
+                        onChanged: notifier.filterByCategory,
+                      ),
+                      const SizedBox(width: 12),
+                      FilterDropdown<StockAlertFilter>(
+                        label: 'Stock',
+                        value: state.filterStockAlert,
+                        items: const [
+                          DropdownMenuItem(value: StockAlertFilter.all, child: Text('Todo el stock')),
+                          DropdownMenuItem(value: StockAlertFilter.low, child: Text('Bajo mínimo')),
+                          DropdownMenuItem(value: StockAlertFilter.outOfStock, child: Text('Agotados')),
+                        ],
+                        onChanged: notifier.filterByStockAlert,
+                      ),
+                      const SizedBox(width: 12),
+                      FilterChip(
+                        label: const Text('Incluir inactivos'),
+                        selected: state.showInactive,
+                        onSelected: (_) => notifier.toggleShowInactive(),
+                      ),
+                      if (state.hasActiveFilters) ...[
+                        const SizedBox(width: 4),
+                        TextButton(onPressed: clearFilters, child: const Text('Limpiar')),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: DataTableView<Product, ProductSort>(
+                      columns: const [
+                        TableColumn('Producto', flex: 5, sortKey: ProductSort.name),
+                        TableColumn('Categoría', flex: 2, sortKey: ProductSort.category),
+                        TableColumn('Precio', flex: 2, numeric: true, sortKey: ProductSort.price),
+                        TableColumn('Costo', flex: 2, numeric: true, sortKey: ProductSort.costPrice),
+                        TableColumn('Stock', flex: 2, numeric: true, sortKey: ProductSort.stock),
+                        TableColumn('Estado', width: 112),
+                      ],
+                      rows: state.products,
+                      loading: state.isLoading,
+                      sortKey: state.sortBy,
+                      ascending: state.ascending,
+                      onSort: notifier.sort,
+                      rowAccent: stockColorFor,
+                      onRowTap: openProduct,
+                      cells: (p) => [
+                        _ProductNameCell(product: p),
+                        Text(p.category,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                        Text(_currencyFmt.format(p.price),
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                        Text(_currencyFmt.format(p.costPrice),
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                        _StockCell(product: p),
+                        _StatusBadge(active: p.isActive),
+                      ],
+                      empty: state.isLoading ? null : empty,
+                      footer: pager,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
       // ── FAB: Crear producto (en escritorio va en el encabezado) ──
       floatingActionButton: context.isCompact
@@ -447,6 +547,89 @@ class _StockAlertChip extends StatelessWidget {
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Celdas de la tabla (USB-018) ──────────────────────────────
+
+class _ProductNameCell extends StatelessWidget {
+  final Product product;
+  const _ProductNameCell({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ProductThumbnail(imageUrl: product.imageUrl, size: 36),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                product.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+              ),
+              if (product.barcode != null && product.barcode!.isNotEmpty)
+                Text(
+                  product.barcode!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StockCell extends StatelessWidget {
+  final Product product;
+  const _StockCell({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(
+          text: '${product.stock}',
+          style: TextStyle(color: stockColorFor(product), fontWeight: FontWeight.w700),
+        ),
+        TextSpan(
+          text: '  mín ${product.minStock}',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+      ]),
+      style: const TextStyle(fontSize: 13.5),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final bool active;
+  const _StatusBadge({required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? AppColors.success : AppColors.textSecondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        active ? 'Activo' : 'Inactivo',
+        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }

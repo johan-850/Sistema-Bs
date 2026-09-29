@@ -13,6 +13,10 @@ typedef ProductResult = ({Product? product, Failure? failure});
 /// Result record para listados de productos
 typedef ProductListResult = ({List<Product> products, Failure? failure});
 
+/// Columna por la que se ordena el listado (USB-018). El orden lo aplica
+/// el servidor: ordenar solo la página visible mentiría sobre el resto.
+enum ProductSort { name, category, price, costPrice, stock }
+
 /// Contrato que define las operaciones de persistencia de productos.
 /// La implementación concreta vive en la capa data/.
 abstract class ProductRepository {
@@ -23,12 +27,15 @@ abstract class ProductRepository {
   /// [activeOnly]: si es true, solo devuelve productos activos.
   /// [page]: número de página (0-indexed).
   /// [pageSize]: cantidad de resultados por página.
+  /// [sortBy]/[ascending]: orden; los empates se resuelven por nombre.
   Future<ProductListResult> getProducts({
     String? query,
     String? category,
     bool activeOnly = true,
     int page = 0,
     int pageSize = 20,
+    ProductSort sortBy = ProductSort.name,
+    bool ascending = true,
   });
 
   /// Obtiene un producto por su ID.

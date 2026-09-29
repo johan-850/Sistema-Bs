@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/product.dart';
+import '../../domain/repositories/product_repository.dart' show ProductSort;
 import '../../../../core/constants/app_constants.dart';
 
 /// Acceso directo a la tabla `products` en Supabase.
@@ -50,6 +51,8 @@ class ProductRemoteDatasource {
     bool activeOnly = true,
     int page = 0,
     int pageSize = 20,
+    ProductSort sortBy = ProductSort.name,
+    bool ascending = true,
   }) async {
     var q = _client.from(AppConstants.tableProducts).select();
 
@@ -70,10 +73,18 @@ class ProductRemoteDatasource {
       q = q.or('barcode.eq.$term,name.ilike.%$term%');
     }
 
-    // Ordenar y paginar DESPUÉS de aplicar filtros
-    final results = await q
-        .order('name', ascending: true)
-        .range(page * pageSize, (page + 1) * pageSize - 1);
+    // Ordenar y paginar DESPUÉS de aplicar filtros. El nombre desempata:
+    // sin un orden total, dos páginas podrían repetir o saltarse filas.
+    final column = switch (sortBy) {
+      ProductSort.name => 'name',
+      ProductSort.category => 'category',
+      ProductSort.price => 'price',
+      ProductSort.costPrice => 'cost_price',
+      ProductSort.stock => 'stock',
+    };
+    var ordered = q.order(column, ascending: ascending);
+    if (sortBy != ProductSort.name) ordered = ordered.order('name', ascending: true);
+    final results = await ordered.range(page * pageSize, (page + 1) * pageSize - 1);
 
     return results.map<Product>(_fromJson).toList();
   }

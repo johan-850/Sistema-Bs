@@ -24,6 +24,8 @@ class GetProductsUseCase {
     bool activeOnly = true,
     int page = 0,
     int pageSize = 20,
+    ProductSort sortBy = ProductSort.name,
+    bool ascending = true,
   }) =>
       _repository.getProducts(
         query: query,
@@ -31,6 +33,8 @@ class GetProductsUseCase {
         activeOnly: activeOnly,
         page: page,
         pageSize: pageSize,
+        sortBy: sortBy,
+        ascending: ascending,
       );
 }
 

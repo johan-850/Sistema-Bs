@@ -72,21 +72,31 @@ class ProductListState {
   final int currentPage;
   final Failure? failure;
 
+  /// La página cargada vino llena: puede haber otra después (USB-018).
+  final bool hasNextPage;
+
   // Filtros activos
   final String? searchQuery;
   final String? filterCategory;
   final bool showInactive;
   final StockAlertFilter filterStockAlert;
 
+  // Orden (USB-018)
+  final ProductSort sortBy;
+  final bool ascending;
+
   const ProductListState({
     this.products = const [],
     this.isLoading = false,
     this.currentPage = 0,
     this.failure,
+    this.hasNextPage = false,
     this.searchQuery,
     this.filterCategory,
     this.showInactive = false,
     this.filterStockAlert = StockAlertFilter.all,
+    this.sortBy = ProductSort.name,
+    this.ascending = true,
   });
 
   /// True cuando hay filtros o búsqueda activa
@@ -101,10 +111,13 @@ class ProductListState {
     bool? isLoading,
     int? currentPage,
     Failure? failure,
+    bool? hasNextPage,
     String? searchQuery,
     String? filterCategory,
     bool? showInactive,
     StockAlertFilter? filterStockAlert,
+    ProductSort? sortBy,
+    bool? ascending,
     bool clearFailure = false,
     bool clearFilters = false,
   }) =>
@@ -113,6 +126,9 @@ class ProductListState {
         isLoading: isLoading ?? this.isLoading,
         currentPage: currentPage ?? this.currentPage,
         failure: clearFailure ? null : (failure ?? this.failure),
+        hasNextPage: hasNextPage ?? this.hasNextPage,
+        sortBy: sortBy ?? this.sortBy,
+        ascending: ascending ?? this.ascending,
         searchQuery:
             clearFilters ? null : (searchQuery ?? this.searchQuery),
         filterCategory:
@@ -134,8 +150,10 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
     // Refresco en tiempo real cuando cambia la tabla products (ej. un
     // ajuste de stock o una edición hecha desde otra sesión) — mismo
     // criterio que InventoryListNotifier (EP-04) y PosCatalogNotifier.
+    // Recarga la página actual: con paginación, volver a la primera cada
+    // vez que se vende algo en otra caja sacaría al admin de donde estaba.
     _realtimeSub = client.from('products').stream(primaryKey: ['id']).listen((_) {
-      load();
+      refresh();
     });
   }
 
@@ -151,6 +169,10 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
   /// traído: Supabase/PostgREST no compara columnas entre sí
   /// (stock vs min_stock) en una query simple. A la escala de una
   /// tienda pequeña esto es aceptable.
+  /// Filas por página. Una tabla de escritorio muestra más que una
+  /// lista de celular, así que la página es más grande que el default.
+  static const pageSize = 50;
+
   Future<void> load({int page = 0}) async {
     state = state.copyWith(isLoading: true, currentPage: page, clearFailure: true);
 
@@ -159,6 +181,9 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
       category: state.filterCategory,
       activeOnly: !state.showInactive,
       page: page,
+      pageSize: pageSize,
+      sortBy: state.sortBy,
+      ascending: state.ascending,
     );
 
     if (result.failure != null) {
@@ -169,9 +194,29 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
         StockAlertFilter.low => result.products.where((p) => p.isLowStock && !p.isOutOfStock).toList(),
         StockAlertFilter.outOfStock => result.products.where((p) => p.isOutOfStock).toList(),
       };
-      state = state.copyWith(isLoading: false, products: filtered);
+      state = state.copyWith(
+        isLoading: false,
+        products: filtered,
+        // Se mide sobre lo que devolvió el servidor, antes del filtro de
+        // stock: una página filtrada puede venir corta y aun así seguir.
+        hasNextPage: result.products.length == pageSize,
+      );
     }
   }
+
+  /// USB-018: ordena por [column]; si ya era esa columna, invierte el orden.
+  Future<void> sort(ProductSort column) async {
+    state = state.copyWith(
+      sortBy: column,
+      ascending: state.sortBy == column ? !state.ascending : true,
+    );
+    await load();
+  }
+
+  Future<void> nextPage() => load(page: state.currentPage + 1);
+
+  Future<void> previousPage() =>
+      load(page: state.currentPage > 0 ? state.currentPage - 1 : 0);
 
   /// Buscar por texto (nombre o código de barras)
   Future<void> search(String query) async {

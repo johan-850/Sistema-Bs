@@ -15,6 +15,13 @@ import 'hover_ink_well.dart';
 import 'readable_width.dart';
 import 'product_thumbnail.dart';
 
+/// Semáforo de stock del catálogo: el mismo en tarjetas y tablas.
+Color stockColorFor(Product product) {
+  if (product.isOutOfStock) return AppColors.stockCritical;
+  if (product.isLowStock) return AppColors.stockWarning;
+  return AppColors.stockOk;
+}
+
 class ProductListCard extends StatelessWidget {
   final Product product;
   final NumberFormat currencyFmt;
@@ -35,11 +42,7 @@ class ProductListCard extends StatelessWidget {
     this.showMinStock = false,
   });
 
-  Color get _stockColor {
-    if (product.isOutOfStock) return AppColors.stockCritical;
-    if (product.isLowStock) return AppColors.stockWarning;
-    return AppColors.stockOk;
-  }
+  Color get _stockColor => stockColorFor(product);
 
   @override
   Widget build(BuildContext context) {
