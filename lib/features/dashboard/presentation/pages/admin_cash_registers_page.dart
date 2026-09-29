@@ -13,6 +13,7 @@ import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_page_bar.dart';
+import '../../../../core/widgets/data_table_view.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../cash_register/domain/entities/cash_register.dart';
 import '../../../cash_register/presentation/providers/cash_register_providers.dart';
@@ -38,18 +39,176 @@ class _AdminCashRegistersPageState
     final state = ref.watch(registerHistoryProvider);
     final notifier = ref.read(registerHistoryProvider.notifier);
 
+    final compact = context.isCompact;
     return Scaffold(
       appBar: AppPageBar(
         title: 'Historial de cajas',
         actions: [
-          PageAction(
-            icon: Icons.filter_list_rounded,
-            label: 'Filtrar',
-            onPressed: () => _showFilterSheet(context, notifier),
+          // En escritorio los filtros están a la vista sobre la tabla.
+          if (compact)
+            PageAction(
+              icon: Icons.filter_list_rounded,
+              label: 'Filtrar',
+              highlighted: state.hasActiveFilters,
+              onPressed: () => _showFilterSheet(context, notifier),
+            ),
+        ],
+      ),
+      body: compact ? _compactBody(state, notifier) : _desktopBody(state, notifier),
+    );
+  }
+
+  /// USB-024: tabla de turnos con el cuadre de cada uno a la vista; el
+  /// detalle completo (denominaciones, notas) abre en un diálogo.
+  Widget _desktopBody(RegisterHistoryState state, RegisterHistoryNotifier notifier) {
+    final cashiers = ref.watch(cashierListProvider).cashiers;
+    final money = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+    final dayFmt = DateFormat('dd/MM/yyyy', 'es');
+    final hourFmt = DateFormat('h:mm a', 'es');
+
+    Widget amount(double? value, {Color? color, FontWeight? weight}) => Text(
+          value == null ? '—' : money.format(value),
+          style: TextStyle(
+            fontSize: 13,
+            color: value == null ? AppColors.textDisabled : color,
+            fontWeight: weight,
+          ),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilterDropdown<String?>(
+                label: 'Cajero',
+                value: state.filterCashierId,
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('Todos los cajeros')),
+                  ...cashiers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
+                ],
+                onChanged: (v) => notifier.setFilters(
+                    cashierId: v, from: state.filterFrom, to: state.filterTo),
+              ),
+              SizedBox(
+                width: 240,
+                child: _DatePickerTile(
+                  label: 'Desde',
+                  value: state.filterFrom,
+                  onPicked: (d) => notifier.setFilters(
+                      cashierId: state.filterCashierId, from: d, to: state.filterTo),
+                ),
+              ),
+              SizedBox(
+                width: 240,
+                child: _DatePickerTile(
+                  label: 'Hasta',
+                  value: state.filterTo,
+                  onPicked: (d) => notifier.setFilters(
+                      cashierId: state.filterCashierId, from: state.filterFrom, to: d),
+                ),
+              ),
+              if (state.hasActiveFilters)
+                TextButton.icon(
+                  onPressed: notifier.clearFilters,
+                  icon: const Icon(Icons.clear_rounded, size: 18),
+                  label: const Text('Limpiar'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: DataTableView<CashRegister, Object>(
+              columns: const [
+                TableColumn('Turno', flex: 3),
+                TableColumn('Cajero', flex: 2),
+                TableColumn('Estado', width: 112),
+                TableColumn('Base', flex: 2, numeric: true),
+                TableColumn('Ventas', flex: 2, numeric: true),
+                TableColumn('Esperado', flex: 2, numeric: true),
+                TableColumn('Contado', flex: 2, numeric: true),
+                TableColumn('Diferencia', flex: 2, numeric: true),
+              ],
+              rows: state.registers,
+              loading: state.isLoading,
+              rowAccent: _accentFor,
+              onRowTap: (r) => _showDetailSheet(context, r),
+              cells: (r) {
+                final local = r.openingTime.toLocal();
+                final summary = r.closingSummary;
+                return [
+                  Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: dayFmt.format(local)),
+                      TextSpan(
+                        text: '\n${hourFmt.format(local)}'
+                            '${r.closingTime != null ? ' – ${hourFmt.format(r.closingTime!.toLocal())}' : ''}',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      ),
+                    ]),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  Text(r.cashierName ?? 'Cajero',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13)),
+                  _StatusBadge(register: r),
+                  amount(r.openingAmount),
+                  amount(summary?.salesTotal),
+                  amount(summary?.expectedCash),
+                  amount(summary?.countedCash),
+                  summary == null
+                      ? amount(null)
+                      : amount(
+                          summary.difference,
+                          color: _differenceColor(summary.difference),
+                          weight: FontWeight.w700,
+                        ),
+                ];
+              },
+              empty: state.isLoading ? null : _EmptyState(onRefresh: () => notifier.load()),
+              footer: TablePager(
+                page: state.currentPage,
+                hasNext: state.hasNextPage,
+                onPrevious: notifier.previousPage,
+                onNext: notifier.nextPage,
+              ),
+            ),
           ),
         ],
       ),
-      body: RefreshIndicator(
+    );
+  }
+
+  Color? _accentFor(CashRegister r) {
+    if (r.isOpen) return AppColors.primary;
+    if (r.isClosing) return AppColors.stockNearVivid;
+    final summary = r.closingSummary;
+    return summary == null ? null : _differenceColor(summary.difference);
+  }
+
+  Widget _compactBody(RegisterHistoryState state, RegisterHistoryNotifier notifier) {
+    return Column(
+      children: [
+        Expanded(child: _compactList(state, notifier)),
+        if (state.currentPage > 0 || state.hasNextPage)
+          TablePager(
+            page: state.currentPage,
+            hasNext: state.hasNextPage,
+            onPrevious: notifier.previousPage,
+            onNext: notifier.nextPage,
+          ),
+      ],
+    );
+  }
+
+  Widget _compactList(RegisterHistoryState state, RegisterHistoryNotifier notifier) {
+    return RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () => notifier.load(),
         child: state.isLoading
@@ -70,7 +229,6 @@ class _AdminCashRegistersPageState
                       onTap: () => _showDetailSheet(context, state.registers[i]),
                     ),
                   ),
-      ),
     );
   }
 
@@ -185,6 +343,38 @@ class _AdminCashRegistersPageState
   }
 }
 
+/// US-045: verde si el cuadre es exacto, amarillo hasta 5.000 de
+/// diferencia, rojo por encima. Mismo criterio en la tarjeta y la tabla.
+Color _differenceColor(double difference) {
+  if (difference == 0) return AppColors.success;
+  return difference.abs() <= 5000 ? AppColors.stockNearVivid : AppColors.stockCriticalVivid;
+}
+
+class _StatusBadge extends StatelessWidget {
+  final CashRegister register;
+  const _StatusBadge({required this.register});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = register.isOpen
+        ? ('Abierta', AppColors.success)
+        : register.isClosing
+            ? ('Cerrando', AppColors.stockNearVivid)
+            : ('Cerrada', AppColors.textSecondary);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: register.isClosed ? AppColors.surfaceElevated : color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 11),
+      ),
+    );
+  }
+}
+
 // ── Tarjeta de apertura en lista ──────────────────────────────
 
 class _RegisterCard extends StatelessWidget {
@@ -277,29 +467,7 @@ class _RegisterCard extends StatelessWidget {
             ),
 
             // ── Badge estado (Abierta / Cerrando / Cerrada) ────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isOpen
-                    ? AppColors.success.withValues(alpha: 0.15)
-                    : isClosing
-                        ? AppColors.stockNearVivid.withValues(alpha: 0.15)
-                        : AppColors.surfaceElevated,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                isOpen ? 'Abierta' : (isClosing ? 'Cerrando' : 'Cerrada'),
-                style: TextStyle(
-                  color: isOpen
-                      ? AppColors.success
-                      : isClosing
-                          ? AppColors.stockNearVivid
-                          : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
-                ),
-              ),
-            ),
+            _StatusBadge(register: register),
             // US-045: punto ok/alerta según la diferencia del cuadre.
             if (register.isClosed && register.closingSummary != null) ...[
               const SizedBox(width: 8),
@@ -312,11 +480,7 @@ class _RegisterCard extends StatelessWidget {
                   height: 10,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: register.closingSummary!.difference == 0
-                        ? AppColors.success
-                        : (register.closingSummary!.difference.abs() <= 5000
-                            ? AppColors.stockNearVivid
-                            : AppColors.stockCriticalVivid),
+                    color: _differenceColor(register.closingSummary!.difference),
                   ),
                 ),
               ),

@@ -230,6 +230,10 @@ class RegisterHistoryState {
   final bool isLoading;
   final int currentPage;
   final Failure? failure;
+
+  /// La página cargada vino llena: puede haber otra después (USB-024).
+  final bool hasNextPage;
+
   // Filtros activos
   final String? filterCashierId;
   final DateTime? filterFrom;
@@ -240,16 +244,21 @@ class RegisterHistoryState {
     this.isLoading = false,
     this.currentPage = 0,
     this.failure,
+    this.hasNextPage = false,
     this.filterCashierId,
     this.filterFrom,
     this.filterTo,
   });
+
+  bool get hasActiveFilters =>
+      filterCashierId != null || filterFrom != null || filterTo != null;
 
   RegisterHistoryState copyWith({
     List<CashRegister>? registers,
     bool? isLoading,
     int? currentPage,
     Failure? failure,
+    bool? hasNextPage,
     String? filterCashierId,
     DateTime? filterFrom,
     DateTime? filterTo,
@@ -260,6 +269,7 @@ class RegisterHistoryState {
         isLoading: isLoading ?? this.isLoading,
         currentPage: currentPage ?? this.currentPage,
         failure: failure,
+        hasNextPage: hasNextPage ?? this.hasNextPage,
         filterCashierId:
             clearFilters ? null : (filterCashierId ?? this.filterCashierId),
         filterFrom: clearFilters ? null : (filterFrom ?? this.filterFrom),
@@ -293,6 +303,7 @@ class RegisterHistoryNotifier extends StateNotifier<RegisterHistoryState> {
       from: from ?? state.filterFrom,
       to: to ?? state.filterTo,
       page: page,
+      pageSize: pageSize,
     );
 
     if (result.failure != null) {
@@ -301,9 +312,13 @@ class RegisterHistoryNotifier extends StateNotifier<RegisterHistoryState> {
       state = state.copyWith(
         isLoading: false,
         registers: result.registers,
+        hasNextPage: result.registers.length == pageSize,
       );
     }
   }
+
+  /// Filas por página en la tabla de escritorio (USB-024).
+  static const pageSize = 50;
 
   Future<void> applyFilters({
     String? cashierId,
@@ -312,10 +327,27 @@ class RegisterHistoryNotifier extends StateNotifier<RegisterHistoryState> {
   }) =>
       load(cashierId: cashierId, from: from, to: to, page: 0);
 
+  /// USB-024: reemplaza los tres filtros a la vez, incluido volver uno a
+  /// vacío (applyFilters no puede: un null ahí significa "sin cambios").
+  Future<void> setFilters({String? cashierId, DateTime? from, DateTime? to}) async {
+    state = RegisterHistoryState(
+      registers: state.registers,
+      filterCashierId: cashierId,
+      filterFrom: from,
+      filterTo: to,
+    );
+    await load();
+  }
+
   Future<void> clearFilters() async {
     state = state.copyWith(clearFilters: true);
     await load();
   }
+
+  Future<void> nextPage() => load(page: state.currentPage + 1);
+
+  Future<void> previousPage() =>
+      load(page: state.currentPage > 0 ? state.currentPage - 1 : 0);
 }
 
 final registerHistoryProvider =
