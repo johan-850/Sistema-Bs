@@ -8,7 +8,7 @@
 | **Historias de usuario** | 41 (USB-001 → USB-041) |
 | **Story Points** | 227 |
 | **Sprints estimados** | 9 (2 semanas cada uno) |
-| **Completado** | 34 SP (SB-01, SB-02) |
+| **Completado** | 71 SP (SB-01 a SB-03) |
 | **Roles** | AdminMaster (AM), Cajero (CAJ) |
 
 Los planes de implementación de cada sprint están en [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -250,7 +250,7 @@ Plan de implementación de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 |---|---|---|---|---|---|
 | SB-01 | Backend independiente y reproducible | USB-001 → USB-005 | 21 | EPB-01 | Completo |
 | SB-02 | Base del proyecto web | USB-006 → USB-009 | 13 | EPB-02 | Completo |
-| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | EPB-03 | Planeado |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | EPB-03 | Completo |
 | [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | USB-014 → USB-017 | 31 | EPB-04 | Planeado |
 | [SB-05](docs/sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021, USB-040 | 29 | EPB-05 | Planeado |
 | [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | USB-022 → USB-024, USB-029, USB-030 | 28 | EPB-06 / EPB-08 | Planeado |
@@ -258,7 +258,7 @@ Plan de implementación de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 | [SB-08](docs/sprints/SB-08.md) | Despliegue y gestión de cajeros | USB-031 → USB-033, USB-041 | 21 | EPB-09 / EPB-11 | Planeado |
 | [SB-09](docs/sprints/SB-09.md) | Pistola lectora | USB-034 → USB-037 | 21 | EPB-10 | Planeado |
 
-**Total: 227 SP en 9 sprints (~18 semanas).** Completado 34 SP; pendiente 193 SP.
+**Total: 227 SP en 9 sprints (~18 semanas).** Completado 71 SP; pendiente 156 SP.
 
 La v1.0 estimaba 8 sprints. Son 9 porque SB-02 entregó 13 de sus 29 SP: `USB-010` y `USB-011` arrastraron a SB-03. El motivo y el detalle están en [docs/ROADMAP.md](docs/ROADMAP.md).
 

@@ -10,7 +10,7 @@ Secuencia de sprints, dependencias entre ellos y decisiones transversales. El *q
 |---|---|---|---|---|
 | SB-01 | Fundación del backend | USB-001 → USB-005 | 21 | Completo (`891449c`) |
 | SB-02 | Base del proyecto web | USB-006 → USB-009 | 13 | Completo (`49635e4`) |
-| [SB-03](sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | Planeado |
+| [SB-03](sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | USB-039, USB-038, USB-010 → USB-013 | 37 | Completo (`48a0583`…`0839cc3`) |
 | [SB-04](sprints/SB-04.md) | POS de escritorio | USB-014 → USB-017 | 31 | Planeado |
 | [SB-05](sprints/SB-05.md) | Productos e inventario | USB-018 → USB-021, USB-040 | 29 | Planeado |
 | [SB-06](sprints/SB-06.md) | Caja, gastos e impresión | USB-022 → USB-024, USB-029, USB-030 | 28 | Planeado |
@@ -18,7 +18,7 @@ Secuencia de sprints, dependencias entre ellos y decisiones transversales. El *q
 | [SB-08](sprints/SB-08.md) | Despliegue y gestión de cajeros | USB-031 → USB-033, USB-041 | 21 | Planeado |
 | [SB-09](sprints/SB-09.md) | Pistola lectora HID | USB-034 → USB-037 | 21 | Planeado |
 
-**Pendiente: 193 SP en 7 sprints.** Completado: 34 SP.
+**Pendiente: 156 SP en 6 sprints.** Completado: 71 SP.
 
 > Los planes se auditaron el 2026-09-19 contra el código real. La auditoría agregó tres historias (`USB-039`, `USB-040`, `USB-041`, +18 SP) y dejó abierta una decisión sobre la relación con Sistema AS — ver [Auditoría](#auditoría-2026-09-19) al final.
 

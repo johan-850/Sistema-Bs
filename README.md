@@ -4,7 +4,7 @@
 <img src="https://img.shields.io/badge/Dart-3.12.2-0175C2?style=for-the-badge&logo=dart&logoColor=white" />
 <img src="https://img.shields.io/badge/Supabase-2.x-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
 <img src="https://img.shields.io/badge/Plataforma-Web%20Escritorio-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" />
-<img src="https://img.shields.io/badge/Estado-Planificaci%C3%B3n-yellow?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Estado-En%20desarrollo-blue?style=for-the-badge" />
 
 </div>
 
@@ -26,12 +26,13 @@
 
 ### Estado actual
 
-**Sprints 1 y 2 completos (34 de 209 SP).**
+**Sprints 1 a 3 completos (71 de 227 SP).**
 
 - **SB-01 — Backend**: las 10 migraciones SQL que levantan el esquema completo en un proyecto Supabase nuevo (incluida `002_base_schema.sql`, que reconstruye lo que en Sistema AS se creó a mano desde el Dashboard), las tres Edge Functions, el runbook de despliegue y el script de bootstrap del AdminMaster.
 - **SB-02 — Base web**: el código Flutter portado desde Sistema AS (106 archivos), compilando y arrancando en navegador, con la identidad renombrada y 32 dependencias sin uso podadas del `pubspec.yaml`.
+- **SB-03 — Shell de escritorio**: barra lateral persistente, formularios en diálogos centrados, guard de rol por ruta, puntos de quiebre, hover y foco visibles, y las tres correcciones heredadas de Sistema AS (turno activo, una caja abierta por cajero, un solo `confirm_sale`).
 
-**La interfaz todavía es la de móvil.** La adaptación a escritorio (barra lateral, tablas densas, operación por teclado) empieza en SB-03. El plan de cada sprint restante está en [docs/ROADMAP.md](docs/ROADMAP.md).
+**El marco ya es de escritorio; las pantallas todavía no.** Productos, inventario e historial siguen como listas de tarjetas, y el POS en una columna, hasta sus sprints (SB-04 en adelante). El plan de cada sprint restante está en [docs/ROADMAP.md](docs/ROADMAP.md).
 
 El desarrollo parte del código de [Sistema AS](https://github.com/johan-850/SIstema_AS) (Abarrotería Pro), la versión móvil de esta misma solución, donde ya están construidas y funcionando contra Supabase real diez épicas de lógica de negocio.
 
@@ -170,7 +171,7 @@ Detalle completo en [BACKLOG.md](BACKLOG.md).
 |---|-------|----|----|--------|--------|
 | EPB-01 | Fundación: esquema completo e independiente | 5 | 21 | SB-01 | Completo |
 | EPB-02 | Base del proyecto web | 4 | 13 | SB-02 | Completo |
-| EPB-03 | Shell responsive de escritorio | 6 | 37 | SB-03 | Planeado |
+| EPB-03 | Shell responsive de escritorio | 6 | 37 | SB-03 | Completo |
 | EPB-04 | POS de escritorio | 4 | 31 | SB-04 | Planeado |
 | EPB-05 | Productos e inventario en escritorio | 5 | 29 | SB-05 | Planeado |
 | EPB-06 | Caja y gastos en escritorio | 3 | 15 | SB-06 | Planeado |
@@ -257,6 +258,9 @@ Los scripts se ejecutan **en orden** desde el **SQL Editor** del proyecto Supaba
 | `008_expenses.sql` | `expense_categories`, `expenses`, columnas de configuración de gastos |
 | `009_closing.sql` | Agrega `'closing'` al enum, funciones `start_register_closing` y `close_register` |
 | `010_weekly_report.sql` | Configuración del reporte semanal por correo (opcional) |
+| `011_one_open_register.sql` | Índice único: un cajero no puede tener dos cajas sin cerrar (leer el paso 1 antes de correrla) |
+| `012_start_closing_idempotent.sql` | `start_register_closing` idempotente, para retomar un cierre a medias |
+| `013_drop_duplicate_confirm_sale.sql` | Borra la sobrecarga vieja de `confirm_sale` y deja una sola |
 
 ### Sobre la migración `002`
 
@@ -309,7 +313,7 @@ Plan detallado de cada sprint en [docs/ROADMAP.md](docs/ROADMAP.md).
 |--------|------|----|--------|
 | SB-01 | Backend independiente y reproducible | 21 | Completo |
 | SB-02 | Base del proyecto web | 13 | Completo |
-| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | 37 | Planeado |
+| [SB-03](docs/sprints/SB-03.md) | Shell de escritorio + correcciones heredadas | 37 | Completo |
 | [SB-04](docs/sprints/SB-04.md) | Punto de venta de escritorio | 31 | Planeado |
 | [SB-05](docs/sprints/SB-05.md) | Productos e inventario | 29 | Planeado |
 | [SB-06](docs/sprints/SB-06.md) | Caja, gastos e impresión | 28 | Planeado |
