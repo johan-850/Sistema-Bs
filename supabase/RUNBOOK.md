@@ -28,6 +28,7 @@ Pega el contenido completo de cada archivo en el SQL Editor y ejecútalo antes d
 | 11 | `migrations/011_one_open_register.sql` | Índice único: un cajero no puede tener dos cajas sin cerrar — **lee el paso 1 del archivo antes de correrlo** |
 | 12 | `migrations/012_start_closing_idempotent.sql` | `start_register_closing` idempotente, para poder retomar un cierre a medias |
 | 13 | `migrations/013_drop_duplicate_confirm_sale.sql` | Borra la sobrecarga vieja de `confirm_sale` y deja una sola |
+| 14 | `migrations/014_admin_role_from_profiles.sql` | El AdminMaster se reconoce por `profiles.role` también en `profiles` y `user_activity_logs` (sin esto la lista de cajeros sale vacía) |
 
 ### Nota sobre las migraciones 011 a 013 (USB-039)
 
@@ -47,7 +48,7 @@ Después de correr todo, confirma en **Table Editor**:
 
 - [ ] Existen las 13 tablas: `profiles`, `user_activity_logs`, `products`, `cash_registers`, `stock_movements`, `restock_requests`, `sales`, `sale_items`, `sale_cancellations`, `low_stock_alerts`, `store_settings`, `expense_categories`, `expenses`.
 - [ ] `products` y `cash_registers` tienen RLS habilitado (ícono de escudo en Table Editor).
-- [ ] En **Database → Functions** existen: `handle_new_user`, `handle_user_login`, `adjust_product_stock`, `confirm_sale`, `start_register_closing`, `close_register`.
+- [ ] En **Database → Functions** existen: `handle_new_user`, `handle_user_login`, `adjust_product_stock`, `confirm_sale`, `start_register_closing`, `close_register`, `is_adminmaster`.
 - [ ] En **Storage** existen los buckets: `product-images`, `store-assets`, `receipt-photos`.
 - [ ] En **Database → Replication** (o Publications), `products` aparece en `supabase_realtime`.
 - [ ] `store_settings` tiene exactamente una fila (`id = 1`) — la inserta automáticamente `007_qr_and_receipt_photo.sql`
