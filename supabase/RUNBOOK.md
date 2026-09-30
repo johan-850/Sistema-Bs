@@ -29,6 +29,7 @@ Pega el contenido completo de cada archivo en el SQL Editor y ejecútalo antes d
 | 12 | `migrations/012_start_closing_idempotent.sql` | `start_register_closing` idempotente, para poder retomar un cierre a medias |
 | 13 | `migrations/013_drop_duplicate_confirm_sale.sql` | Borra la sobrecarga vieja de `confirm_sale` y deja una sola |
 | 14 | `migrations/014_admin_role_from_profiles.sql` | El AdminMaster se reconoce por `profiles.role` también en `profiles` y `user_activity_logs` (sin esto la lista de cajeros sale vacía) |
+| 15 | `migrations/015_revoke_user_sessions.sql` | `revoke_user_sessions`: al desactivar un cajero se cierran sus sesiones abiertas (reemplaza a la Edge Function `toggle-cashier-status`) |
 
 ### Nota sobre las migraciones 011 a 013 (USB-039)
 
@@ -48,7 +49,7 @@ Después de correr todo, confirma en **Table Editor**:
 
 - [ ] Existen las 13 tablas: `profiles`, `user_activity_logs`, `products`, `cash_registers`, `stock_movements`, `restock_requests`, `sales`, `sale_items`, `sale_cancellations`, `low_stock_alerts`, `store_settings`, `expense_categories`, `expenses`.
 - [ ] `products` y `cash_registers` tienen RLS habilitado (ícono de escudo en Table Editor).
-- [ ] En **Database → Functions** existen: `handle_new_user`, `handle_user_login`, `adjust_product_stock`, `confirm_sale`, `start_register_closing`, `close_register`, `is_adminmaster`.
+- [ ] En **Database → Functions** existen: `handle_new_user`, `handle_user_login`, `adjust_product_stock`, `confirm_sale`, `start_register_closing`, `close_register`, `is_adminmaster`, `revoke_user_sessions`.
 - [ ] En **Storage** existen los buckets: `product-images`, `store-assets`, `receipt-photos`.
 - [ ] En **Database → Replication** (o Publications), `products` aparece en `supabase_realtime`.
 - [ ] `store_settings` tiene exactamente una fila (`id = 1`) — la inserta automáticamente `007_qr_and_receipt_photo.sql`
@@ -70,17 +71,18 @@ Ver `bootstrap_admin.sql` en esta misma carpeta. Resumen:
 Requiere el [CLI de Supabase](https://supabase.com/docs/guides/cli) instalado y autenticado (`supabase login`, `supabase link --project-ref <tu-project-ref>`).
 
 ```bash
-supabase functions deploy create-cashier
-supabase functions deploy toggle-cashier-status
+supabase functions deploy create-cashier --no-verify-jwt
 supabase functions deploy send-weekly-report
 ```
+
+`create-cashier` se despliega con `--no-verify-jwt` (sin la verificación del gateway) porque la propia función valida el token y que quien llama sea AdminMaster. Desde el Dashboard equivale a desactivar **Verify JWT** en la configuración de la función.
 
 Secretos necesarios (**Project Settings → Edge Functions → Secrets**, o `supabase secrets set`):
 
 | Secreto | Requerida para | Notas |
 |---|---|---|
-| `SUPABASE_URL` | Las tres | Ya la inyecta Supabase automáticamente en cada función — no hace falta configurarla a mano |
-| `SUPABASE_SERVICE_ROLE_KEY` | Las tres | También automática |
+| `SUPABASE_URL` | Las dos | Ya la inyecta Supabase automáticamente en cada función — no hace falta configurarla a mano |
+| `SUPABASE_SERVICE_ROLE_KEY` | Las dos | También automática |
 | `SUPABASE_ANON_KEY` | `create-cashier`, `send-weekly-report` | También automática |
 | `RESEND_API_KEY` | `send-weekly-report` | Solo si vas a activar el reporte semanal — cuenta gratuita en [resend.com](https://resend.com) |
 | `REPORT_FROM_EMAIL` | `send-weekly-report` | Opcional, cae a `onboarding@resend.dev` si no la configuras |

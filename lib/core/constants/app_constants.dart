@@ -60,7 +60,6 @@ abstract class AppConstants {
 
   // ── Edge Functions ────────────────────────────────────────
   static const String fnCreateCashier        = 'create-cashier';
-  static const String fnToggleCashierStatus  = 'toggle-cashier-status';
   static const String fnSendWeeklyReport     = 'send-weekly-report';
 
   // ── Validación ────────────────────────────────────────────

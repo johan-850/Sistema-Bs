@@ -23,7 +23,7 @@ class UserRemoteDatasource {
     }
   }
 
-  /// US-004: Toggle activo/inactivo + fuerza logout via Edge Function
+  /// US-004: Toggle activo/inactivo + cierra las sesiones abiertas del cajero
   Future<void> toggleCashierStatus({
     required String cashierId,
     required bool isActive,
@@ -43,14 +43,10 @@ class UserRemoteDatasource {
       'metadata': {'timestamp': DateTime.now().toUtc().toIso8601String()},
     });
 
-    // Invalida la sesión activa del cajero vía Edge Function (best-effort:
-    // is_active=false en la BD ya basta para bloquear el próximo login).
+    // Best-effort (migración 015): is_active=false ya bloquea el próximo login.
     if (!isActive) {
       try {
-        await _client.functions.invoke(
-          AppConstants.fnToggleCashierStatus,
-          body: {'userId': cashierId, 'isActive': isActive},
-        );
+        await _client.rpc('revoke_user_sessions', params: {'p_user_id': cashierId});
       } catch (_) { /* No crítico */ }
     }
   }

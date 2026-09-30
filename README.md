@@ -272,11 +272,10 @@ El primer AdminMaster se crea mediante el procedimiento en [`supabase/bootstrap_
 
 ### Edge Functions
 
-El código ya vive en `supabase/functions/` (`create-cashier`, `toggle-cashier-status`, `send-weekly-report`), copiado de Sistema AS sin cambios — son genéricas, sin ninguna dependencia de la plataforma. Se despliegan con la CLI de Supabase:
+El código ya vive en `supabase/functions/` (`create-cashier`, `send-weekly-report`), copiado de Sistema AS — son genéricas, sin ninguna dependencia de la plataforma. Cerrar las sesiones de un cajero desactivado ya no usa Edge Function: lo hace `revoke_user_sessions` (migración 015). Se despliegan con la CLI de Supabase:
 
 ```bash
-supabase functions deploy create-cashier
-supabase functions deploy toggle-cashier-status
+supabase functions deploy create-cashier --no-verify-jwt
 supabase functions deploy send-weekly-report
 ```
 
