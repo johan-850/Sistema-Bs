@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
@@ -44,7 +45,12 @@ class _CreateCashierPageState extends ConsumerState<CreateCashierPage> {
     if (!mounted) return;
     if (success) {
       AppSnackbar.success(context, 'Cajero creado. Se envió correo de bienvenida a ${_emailCtrl.text}');
-      context.pop();
+      // Abierta por URL o tras recargar el navegador no hay pantalla previa.
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.users);
+      }
     }
   }
 

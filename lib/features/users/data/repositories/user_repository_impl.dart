@@ -22,7 +22,16 @@ class UserRepositoryImpl implements UserRepository {
       await _datasource.createCashier(name: name, email: email, password: password);
       return (success: true, failure: null);
     } on FunctionException catch (e) {
-      return (success: false, failure: ServerFailure(e.details?.toString() ?? 'Error en Edge Function'));
+      if (e.status == 404) {
+        return (
+          success: false,
+          failure: const ServerFailure('No se puede crear el cajero: la función create-cashier no está desplegada en Supabase.'),
+        );
+      }
+      // La función responde {"error": "..."}; el gateway, {"message": "..."}.
+      final details = e.details;
+      final message = details is Map ? (details['error'] ?? details['message']) : details;
+      return (success: false, failure: ServerFailure(message?.toString() ?? 'Error en Edge Function'));
     } on Exception catch (e) {
       return (success: false, failure: ServerFailure(e.toString()));
     }
