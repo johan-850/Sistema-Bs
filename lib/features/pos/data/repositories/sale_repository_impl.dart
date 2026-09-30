@@ -159,6 +159,7 @@ class SaleRepositoryImpl implements SaleRepository {
         kpis: (
           todayTotal: k.todayTotal,
           todayCount: k.todayCount,
+          yesterdayTotal: k.yesterdayTotal,
           weekTotal: k.weekTotal,
           weekCount: k.weekCount,
           weekPrevTotal: k.weekPrevTotal,

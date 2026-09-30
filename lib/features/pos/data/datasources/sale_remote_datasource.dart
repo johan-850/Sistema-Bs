@@ -242,6 +242,7 @@ class SaleRemoteDatasource {
   Future<({
     double todayTotal,
     int todayCount,
+    double yesterdayTotal,
     double weekTotal,
     int weekCount,
     double weekPrevTotal,
@@ -257,12 +258,21 @@ class SaleRemoteDatasource {
     final weekPrevStart = weekStart.subtract(const Duration(days: 7));
     final monthStart = DateTime(now.year, now.month);
     final monthPrevStart = DateTime(now.year, now.month - 1);
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+
+    // El mismo tramo del período anterior; el mes pasado puede ser más
+    // corto que lo que va de este (31 de marzo contra febrero).
+    final monthPrevEnd = monthPrevStart.add(now.difference(monthStart));
 
     final today = await _sumSales(from: todayStart, to: now);
+    final yesterday = await _sumSales(from: yesterdayStart, to: yesterdayStart.add(now.difference(todayStart)));
     final week = await _sumSales(from: weekStart, to: now);
-    final weekPrev = await _sumSales(from: weekPrevStart, to: weekStart);
+    final weekPrev = await _sumSales(from: weekPrevStart, to: weekPrevStart.add(now.difference(weekStart)));
     final month = await _sumSales(from: monthStart, to: now);
-    final monthPrev = await _sumSales(from: monthPrevStart, to: monthStart);
+    final monthPrev = await _sumSales(
+      from: monthPrevStart,
+      to: monthPrevEnd.isBefore(monthStart) ? monthPrevEnd : monthStart,
+    );
 
     final methodRows = await _client
         .from(AppConstants.tableSales)
@@ -277,6 +287,7 @@ class SaleRemoteDatasource {
     return (
       todayTotal: today.total,
       todayCount: today.count,
+      yesterdayTotal: yesterday.total,
       weekTotal: week.total,
       weekCount: week.count,
       weekPrevTotal: weekPrev.total,

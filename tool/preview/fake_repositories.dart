@@ -374,6 +374,7 @@ class PreviewSaleRepository implements SaleRepository {
         kpis: (
           todayTotal: 486300.0,
           todayCount: 37,
+          yesterdayTotal: 431800.0,
           weekTotal: 3125400.0,
           weekCount: 241,
           weekPrevTotal: 2870100.0,

@@ -206,7 +206,8 @@ final saleDetailProvider = FutureProvider.autoDispose.family<SaleDetailResult, S
 
 // ── US-048: KPIs del dashboard ────────────────────────────────
 
-final salesKpisProvider = FutureProvider<SalesKpis?>((ref) async {
+// autoDispose: el dashboard vuelve a pedir las cifras cada vez que se entra.
+final salesKpisProvider = FutureProvider.autoDispose<SalesKpis?>((ref) async {
   final result = await ref.read(getSalesKpisUseCaseProvider)();
   return result.kpis;
 });

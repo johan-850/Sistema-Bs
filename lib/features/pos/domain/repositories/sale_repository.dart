@@ -21,9 +21,13 @@ enum SaleSort { date, total, paymentMethod }
 typedef SaleDetailResult = ({Sale? sale, List<SaleItem> items, Failure? failure});
 
 /// US-048: resumen ejecutivo para las tarjetas KPI del dashboard.
+/// Los totales "prev" cubren el mismo tramo del período anterior (ayer
+/// hasta esta hora, la semana pasada hasta este día y hora...), no el
+/// período entero: si no, el lunes siempre sale una caída del 90%.
 typedef SalesKpis = ({
   double todayTotal,
   int todayCount,
+  double yesterdayTotal,
   double weekTotal,
   int weekCount,
   double weekPrevTotal,
