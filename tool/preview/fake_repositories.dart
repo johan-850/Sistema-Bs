@@ -585,6 +585,15 @@ class PreviewUserRepository implements UserRepository {
   }
 
   @override
+  Future<({String? csvContent, Failure? failure})> exportCashiersToCSV() async => (
+        csvContent: [
+          'nombre,correo,activo',
+          for (final c in _cashiers) '${c.name},${c.email},${c.isActive ? 'sí' : 'no'}',
+        ].join('\n'),
+        failure: null,
+      );
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

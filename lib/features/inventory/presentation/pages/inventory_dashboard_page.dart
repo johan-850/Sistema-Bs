@@ -4,18 +4,15 @@
 // export CSV y actualización en tiempo real (Supabase Realtime)
 // ============================================================
 
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:csv/csv.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/breakpoints.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -102,8 +99,8 @@ class _InventoryDashboardPageState
             ),
           PageAction(
             icon: Icons.download_rounded,
-            label: 'Exportar CSV',
-            onPressed: () => _exportCSV(context, state.products),
+            label: 'Descargar CSV',
+            onPressed: () => _exportCSV(context, state),
           ),
           PageAction(
             icon: Icons.playlist_add_check_rounded,
@@ -418,7 +415,8 @@ class _InventoryDashboardPageState
     );
   }
 
-  Future<void> _exportCSV(BuildContext context, List<Product> products) async {
+  void _exportCSV(BuildContext context, InventoryListState state) {
+    final products = state.products;
     if (products.isEmpty) {
       AppSnackbar.warning(context, 'No hay productos para exportar.');
       return;
@@ -436,13 +434,20 @@ class _InventoryDashboardPageState
         ],
       ),
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(
-      Uint8List.fromList(bytes),
-      name: 'inventario_${DateTime.now().millisecondsSinceEpoch}.csv',
-      mimeType: 'text/csv',
+    downloadCsv(
+      const ListToCsvConverter().convert(rows),
+      exportFileName(
+        'inventario',
+        'csv',
+        filters: [
+          switch (state.filterStockAlert) {
+            StockAlertFilter.all => null,
+            StockAlertFilter.low => 'bajo minimo',
+            StockAlertFilter.outOfStock => 'agotados',
+          },
+          state.searchQuery,
+        ],
+      ),
     );
-    await Share.shareXFiles([xFile], text: 'Exportación de Inventario');
   }
 }

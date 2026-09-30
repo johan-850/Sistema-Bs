@@ -4,7 +4,6 @@
 // USB-027: en escritorio, dos gráficas por fila y alto según pantalla.
 // ============================================================
 
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:csv/csv.dart';
@@ -12,10 +11,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/breakpoints.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../pos/domain/repositories/sale_repository.dart';
@@ -291,9 +290,9 @@ class _TopProductsSectionState extends ConsumerState<_TopProductsSection> {
         // En celular no entra junto al título: va arriba del ranking.
         if (!compact) SizedBox(width: 220, child: toggle),
         IconButton(
-          tooltip: 'Exportar CSV',
-          icon: const Icon(Icons.ios_share_rounded, size: 20),
-          onPressed: (productsAsync.valueOrNull ?? const []).isEmpty ? null : () => _exportCsv(productsAsync.value!),
+          tooltip: 'Descargar CSV',
+          icon: const Icon(Icons.download_rounded, size: 20),
+          onPressed: (productsAsync.valueOrNull ?? const []).isEmpty ? null : () => _downloadCsv(productsAsync.value!),
         ),
       ],
       child: productsAsync.when(
@@ -329,19 +328,15 @@ class _TopProductsSectionState extends ConsumerState<_TopProductsSection> {
     );
   }
 
-  Future<void> _exportCsv(List<TopProduct> products) async {
+  void _downloadCsv(List<TopProduct> products) {
     final rows = <List<dynamic>>[
       ['producto', 'unidades_vendidas', 'monto_total'],
       for (final p in products) [p.productName, p.unitsSold, p.amountTotal],
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(
-      bytes,
-      name: 'top_productos_${DateTime.now().millisecondsSinceEpoch}.csv',
-      mimeType: 'text/csv',
+    downloadCsv(
+      const ListToCsvConverter().convert(rows),
+      exportFileName('productos_mas_vendidos', 'csv', filters: [ref.read(statsPeriodProvider).label]),
     );
-    await Share.shareXFiles([xFile], text: 'Ranking de productos más vendidos');
   }
 }
 

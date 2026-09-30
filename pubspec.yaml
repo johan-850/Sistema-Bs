@@ -45,8 +45,10 @@ dependencies:
 
   # ── CSV / Excel Export ───────────────────────────────────────────────────
   csv: ^6.0.0
-  share_plus: ^10.1.4
   file_picker: ^8.1.7
+  # Descargas del navegador (USB-028). Antes llegaba solo como dependencia
+  # transitiva: si un paquete de arriba la soltaba, dejaba de compilar.
+  web: ^1.1.1
 
   # ── Utilities ───────────────────────────────────────────────────────────
   intl: ^0.20.1

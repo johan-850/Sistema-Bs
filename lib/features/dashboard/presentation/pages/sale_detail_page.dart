@@ -7,12 +7,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../../pos/domain/entities/sale.dart';
 import '../../../pos/domain/entities/sale_item.dart';
@@ -122,16 +122,16 @@ class _SaleDetailBody extends ConsumerWidget {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => _shareReceipt(context),
-            icon: const Icon(Icons.share_rounded),
-            label: const Text('Compartir recibo'),
+            onPressed: () => _downloadReceipt(context),
+            icon: const Icon(Icons.download_rounded),
+            label: const Text('Descargar recibo'),
           ),
         ),
       ],
     );
   }
 
-  Future<void> _shareReceipt(BuildContext context) async {
+  Future<void> _downloadReceipt(BuildContext context) async {
     final bytes = await buildReceiptPdfBytes(
       saleId: sale.id,
       createdAt: sale.createdAt,
@@ -142,8 +142,7 @@ class _SaleDetailBody extends ConsumerWidget {
       transferAmount: sale.transferAmount,
       changeAmount: sale.changeAmount,
     );
-    final xFile = XFile.fromData(bytes, name: 'recibo_${sale.id}.pdf', mimeType: 'application/pdf');
-    await Share.shareXFiles([xFile], text: 'Recibo de venta — Sistema Bs');
+    downloadPdf(bytes, receiptFileName(sale.id, sale.createdAt));
   }
 }
 

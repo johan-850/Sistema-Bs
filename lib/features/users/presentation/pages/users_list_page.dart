@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 // ignore: avoid_web_libraries_in_flutter
-import 'package:share_plus/share_plus.dart';
-import 'dart:typed_data';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
@@ -40,7 +38,7 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
         actions: [
           PageAction(
             icon: Icons.download_rounded,
-            label: 'Exportar CSV',
+            label: 'Descargar CSV',
             onPressed: () => _exportCSV(context),
           ),
           PageAction(
@@ -122,17 +120,7 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
       if (context.mounted) AppSnackbar.error(context, result.failure!.message);
       return;
     }
-    // Descarga/Compartir (compatible con móvil, web y escritorio)
-    final bytes = utf8.encode(result.csv!);
-    final fileName = 'cajeros_${DateTime.now().millisecondsSinceEpoch}.csv';
-    final xFile = XFile.fromData(
-      Uint8List.fromList(bytes),
-      name: fileName,
-      mimeType: 'text/csv',
-    );
-    await Share.shareXFiles([xFile], text: 'Exportación de Cajeros');
-    
-    if (context.mounted) AppSnackbar.success(context, 'CSV exportado correctamente');
+    downloadCsv(result.csv!, exportFileName('cajeros', 'csv'));
   }
 }
 

@@ -77,6 +77,21 @@ void main() {
     expect(repo.calls.last.ascending, isTrue);
   });
 
+  test('la descarga trae todas las ventas del filtro, no solo la página visible', () async {
+    final (n, repo) = await _notifier(1200);
+    await n.applyFilters(cashierId: 'c1');
+    await n.sort(SaleSort.total);
+
+    final result = await n.fetchAllForExport();
+
+    expect(result.failure, isNull);
+    expect(result.sales, hasLength(1200));
+    final exportCalls = repo.calls.where((c) => c.pageSize == 500).toList();
+    expect(exportCalls.map((c) => c.page), [0, 1, 2]);
+    expect(exportCalls.every((c) => c.cashierId == 'c1' && c.sortBy == SaleSort.total), isTrue);
+    expect(n.state.sales, hasLength(SalesHistoryNotifier.pageSize)); // la tabla sigue en su página
+  });
+
   test('aplicar o limpiar filtros conserva el orden elegido', () async {
     final (n, repo) = await _notifier(10);
     await n.sort(SaleSort.total);

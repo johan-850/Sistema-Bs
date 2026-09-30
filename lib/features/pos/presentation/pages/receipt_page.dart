@@ -9,11 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/readable_width.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/utils/receipt_pdf.dart';
 import '../../domain/entities/cart_item.dart';
 import '../../domain/entities/sale.dart';
@@ -104,9 +104,9 @@ class ReceiptPage extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _sharePdf,
-                  icon: const Icon(Icons.share_rounded),
-                  label: const Text('Compartir PDF'),
+                  onPressed: _downloadPdf,
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Descargar PDF'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -148,10 +148,8 @@ class ReceiptPage extends StatelessWidget {
         changeAmount: sale.changeAmount,
       );
 
-  Future<void> _sharePdf() async {
-    final bytes = await _buildPdfBytes();
-    final xFile = XFile.fromData(bytes, name: 'recibo_${sale.id}.pdf', mimeType: 'application/pdf');
-    await Share.shareXFiles([xFile], text: 'Recibo de venta — Sistema Bs');
+  Future<void> _downloadPdf() async {
+    downloadPdf(await _buildPdfBytes(), receiptFileName(sale.id, sale.createdAt));
   }
 
   Future<void> _printPdf() async {

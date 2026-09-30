@@ -145,6 +145,31 @@ class SalesHistoryNotifier extends StateNotifier<SalesHistoryState> {
           );
   }
 
+  /// USB-028: todas las ventas de los filtros y el orden actuales, no solo
+  /// la página visible — es lo que se descarga en CSV/PDF.
+  Future<({List<Sale> sales, Failure? failure})> fetchAllForExport() async {
+    const chunk = 500;
+    final all = <Sale>[];
+    for (var page = 0;; page++) {
+      final result = await _getHistory(
+        dateFrom: state.filterDateFrom,
+        dateTo: state.filterDateTo,
+        cashierId: state.filterCashierId,
+        paymentMethod: state.filterPaymentMethod,
+        minAmount: state.filterMinAmount,
+        maxAmount: state.filterMaxAmount,
+        searchId: state.filterSearchId,
+        page: page,
+        pageSize: chunk,
+        sortBy: state.sortBy,
+        ascending: state.ascending,
+      );
+      if (result.failure != null) return (sales: const <Sale>[], failure: result.failure);
+      all.addAll(result.sales);
+      if (result.sales.length < chunk) return (sales: all, failure: null);
+    }
+  }
+
   /// USB-025: ordena por [column]; si ya era esa columna, invierte. Una
   /// columna nueva empieza por lo más reciente o lo más alto.
   Future<void> sort(SaleSort column) async {

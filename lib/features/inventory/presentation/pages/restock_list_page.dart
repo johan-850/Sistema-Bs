@@ -3,15 +3,12 @@
 // US-024: Lista de productos para restock (bajo stock mínimo)
 // ============================================================
 
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:csv/csv.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
@@ -37,7 +34,7 @@ class RestockListPage extends ConsumerWidget {
         actions: [
           PageAction(
             icon: Icons.download_rounded,
-            label: 'Exportar CSV',
+            label: 'Descargar CSV',
             onPressed: () => _exportCSV(context, state.lowStockProducts),
           ),
         ],
@@ -91,7 +88,7 @@ class RestockListPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _exportCSV(BuildContext context, List<Product> products) async {
+  void _exportCSV(BuildContext context, List<Product> products) {
     if (products.isEmpty) {
       AppSnackbar.warning(context, 'No hay productos para exportar.');
       return;
@@ -106,14 +103,7 @@ class RestockListPage extends ConsumerWidget {
             p.minStock - p.stock,
           ]),
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(
-      Uint8List.fromList(bytes),
-      name: 'restock_${DateTime.now().millisecondsSinceEpoch}.csv',
-      mimeType: 'text/csv',
-    );
-    await Share.shareXFiles([xFile], text: 'Lista de restock');
+    downloadCsv(const ListToCsvConverter().convert(rows), exportFileName('reposicion', 'csv'));
   }
 }
 

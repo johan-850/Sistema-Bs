@@ -3,20 +3,17 @@
 // US-037: reporte consolidado de gastos (AdminMaster)
 // ============================================================
 
-import 'dart:convert';
-
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/filter_dropdown.dart';
 import '../../../users/presentation/providers/users_providers.dart';
-import '../../domain/entities/expense.dart';
 import '../providers/expense_providers.dart';
 
 /// Umbral por defecto para la alerta "gastos vs. ventas" — no es un
@@ -43,9 +40,9 @@ class ExpensesReportAdminPage extends ConsumerWidget {
         title: 'Gastos',
         actions: [
           PageAction(
-            icon: Icons.ios_share_rounded,
-            label: 'Exportar CSV',
-            onPressed: state.expenses.isEmpty ? null : () => _exportCsv(state.expenses, cashierNames),
+            icon: Icons.download_rounded,
+            label: 'Descargar CSV',
+            onPressed: state.expenses.isEmpty ? null : () => _downloadCsv(state, cashierNames),
           ),
           PageAction(
             icon: Icons.category_outlined,
@@ -237,7 +234,8 @@ class ExpensesReportAdminPage extends ConsumerWidget {
     await notifier.filterByDateRange(range.start, DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59));
   }
 
-  Future<void> _exportCsv(List<Expense> expenses, Map<String, String> cashierNames) async {
+  void _downloadCsv(ExpensesReportState state, Map<String, String> cashierNames) {
+    final expenses = state.expenses;
     final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
     final rows = <List<dynamic>>[
       ['fecha', 'cajero', 'categoria', 'monto', 'descripcion'],
@@ -250,11 +248,19 @@ class ExpensesReportAdminPage extends ConsumerWidget {
           e.description,
         ],
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(bytes,
-        name: 'gastos_${DateTime.now().millisecondsSinceEpoch}.csv', mimeType: 'text/csv');
-    await Share.shareXFiles([xFile], text: 'Reporte de gastos de caja');
+    downloadCsv(
+      const ListToCsvConverter().convert(rows),
+      exportFileName(
+        'gastos',
+        'csv',
+        filters: [
+          dateRangeLabel(state.filterDateFrom, state.filterDateTo),
+          if (state.filterCashierId != null) cashierNames[state.filterCashierId] ?? state.filterCashierId,
+          // Con filtro de categoría, todas las filas son de esa categoría.
+          if (state.filterCategoryId != null) expenses.first.categoryName,
+        ],
+      ),
+    );
   }
 }
 

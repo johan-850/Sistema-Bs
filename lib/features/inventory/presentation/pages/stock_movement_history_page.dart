@@ -3,16 +3,13 @@
 // US-023: Historial de movimientos de stock de un producto
 // ============================================================
 
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:csv/csv.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/hover_ink_well.dart';
 import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../../../core/widgets/app_page_bar.dart';
@@ -78,8 +75,8 @@ class _StockMovementHistoryPageState extends ConsumerState<StockMovementHistoryP
           ),
           PageAction(
             icon: Icons.download_rounded,
-            label: 'Exportar CSV',
-            onPressed: () => _exportCSV(context, state.movements),
+            label: 'Descargar CSV',
+            onPressed: () => _exportCSV(context, state),
           ),
         ],
       ),
@@ -166,7 +163,8 @@ class _StockMovementHistoryPageState extends ConsumerState<StockMovementHistoryP
     );
   }
 
-  Future<void> _exportCSV(BuildContext context, List<StockMovement> movements) async {
+  void _exportCSV(BuildContext context, StockMovementHistoryState state) {
+    final movements = state.movements;
     if (movements.isEmpty) {
       AppSnackbar.warning(context, 'No hay movimientos para exportar.');
       return;
@@ -184,14 +182,10 @@ class _StockMovementHistoryPageState extends ConsumerState<StockMovementHistoryP
             m.notes ?? '',
           ]),
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(
-      Uint8List.fromList(bytes),
-      name: 'movimientos_stock_${DateTime.now().millisecondsSinceEpoch}.csv',
-      mimeType: 'text/csv',
+    downloadCsv(
+      const ListToCsvConverter().convert(rows),
+      exportFileName('movimientos', 'csv', filters: [_product?.name, dateRangeLabel(state.from, state.to)]),
     );
-    await Share.shareXFiles([xFile], text: 'Historial de movimientos de stock');
   }
 }
 

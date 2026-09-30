@@ -4,8 +4,6 @@
 // US-046: exportar a CSV/PDF
 // ============================================================
 
-import 'dart:convert';
-
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,11 +11,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/theme/breakpoints.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/data_table_view.dart';
@@ -39,6 +37,7 @@ class SalesHistoryPage extends ConsumerStatefulWidget {
 
 class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   final _searchCtrl = TextEditingController();
+  bool _downloading = false;
   final _minCtrl = TextEditingController();
   final _maxCtrl = TextEditingController();
   String? _draftCashierId;
@@ -69,14 +68,16 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         title: 'Historial de ventas',
         actions: [
           PageAction(
-            icon: Icons.ios_share_rounded,
-            label: 'Exportar CSV',
-            onPressed: state.sales.isEmpty ? null : () => _exportCsv(state.sales, cashierNames),
+            icon: Icons.download_rounded,
+            label: 'Descargar CSV',
+            onPressed: state.sales.isEmpty || _downloading ? null : () => _download(pdf: false, cashierNames: cashierNames),
           ),
           PageAction(
             icon: Icons.picture_as_pdf_outlined,
-            label: 'Exportar PDF',
-            onPressed: state.sales.isEmpty ? null : () => _exportPdf(state.sales, cashierNames, currencyFmt),
+            label: 'Descargar PDF',
+            onPressed: state.sales.isEmpty || _downloading
+                ? null
+                : () => _download(pdf: true, cashierNames: cashierNames, currencyFmt: currencyFmt),
           ),
         ],
       ),
@@ -525,7 +526,39 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
     if (applyNow) _applyFilters();
   }
 
-  Future<void> _exportCsv(List<Sale> sales, Map<String, String> cashierNames) async {
+  /// USB-028: descarga todo lo que cumple los filtros (no solo la página
+  /// visible), con la fecha y los filtros en el nombre del archivo.
+  Future<void> _download({required bool pdf, required Map<String, String> cashierNames, NumberFormat? currencyFmt}) async {
+    final state = ref.read(salesHistoryProvider);
+    setState(() => _downloading = true);
+    final result = await ref.read(salesHistoryProvider.notifier).fetchAllForExport();
+    if (!mounted) return;
+    setState(() => _downloading = false);
+    if (result.failure != null) {
+      AppSnackbar.error(context, result.failure!.message);
+      return;
+    }
+
+    final name = exportFileName(
+      'ventas',
+      pdf ? 'pdf' : 'csv',
+      filters: [
+        dateRangeLabel(state.filterDateFrom, state.filterDateTo),
+        if (state.filterCashierId != null) cashierNames[state.filterCashierId] ?? state.filterCashierId,
+        state.filterPaymentMethod,
+        if (state.filterMinAmount != null) 'desde ${state.filterMinAmount!.round()}',
+        if (state.filterMaxAmount != null) 'hasta ${state.filterMaxAmount!.round()}',
+        if (state.filterSearchId != null) 'venta ${state.filterSearchId}',
+      ],
+    );
+    if (pdf) {
+      downloadPdf(await _pdfBytes(result.sales, cashierNames, currencyFmt!), name);
+    } else {
+      downloadCsv(_csv(result.sales, cashierNames), name);
+    }
+  }
+
+  String _csv(List<Sale> sales, Map<String, String> cashierNames) {
     final dateFmt = DateFormat('yyyy-MM-dd HH:mm');
     final rows = <List<dynamic>>[
       ['id', 'fecha', 'cajero', 'metodo_pago', 'total'],
@@ -538,14 +571,10 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
           s.total,
         ],
     ];
-    final csv = const ListToCsvConverter().convert(rows);
-    final bytes = utf8.encode(csv);
-    final xFile =
-        XFile.fromData(bytes, name: 'ventas_${DateTime.now().millisecondsSinceEpoch}.csv', mimeType: 'text/csv');
-    await Share.shareXFiles([xFile], text: 'Historial de ventas');
+    return const ListToCsvConverter().convert(rows);
   }
 
-  Future<void> _exportPdf(List<Sale> sales, Map<String, String> cashierNames, NumberFormat currencyFmt) async {
+  Future<List<int>> _pdfBytes(List<Sale> sales, Map<String, String> cashierNames, NumberFormat currencyFmt) {
     final dateFmt = DateFormat('dd/MM/yy HH:mm');
     final doc = pw.Document();
     doc.addPage(
@@ -569,6 +598,6 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         ],
       ),
     );
-    await Printing.sharePdf(bytes: await doc.save(), filename: 'ventas_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    return doc.save();
   }
 }

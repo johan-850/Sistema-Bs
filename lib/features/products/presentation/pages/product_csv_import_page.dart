@@ -3,15 +3,12 @@
 // US-019: Carga de productos en lote desde un archivo CSV
 // ============================================================
 
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/download_file.dart';
 import '../../../../core/widgets/readable_width.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_page_bar.dart';
@@ -145,14 +142,7 @@ class ProductCsvImportPage extends ConsumerWidget {
   }
 
   Future<void> _downloadTemplate(BuildContext context, ProductCsvImportNotifier notifier) async {
-    final csv = notifier.buildTemplateCsv();
-    final bytes = utf8.encode(csv);
-    final xFile = XFile.fromData(
-      Uint8List.fromList(bytes),
-      name: 'plantilla_productos.csv',
-      mimeType: 'text/csv',
-    );
-    await Share.shareXFiles([xFile], text: 'Plantilla de importación de productos');
+    downloadCsv(notifier.buildTemplateCsv(), 'plantilla_productos.csv');
   }
 
   Future<void> _confirmImport(
