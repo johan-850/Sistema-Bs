@@ -570,6 +570,17 @@ class PreviewUserRepository implements UserRepository {
   }
 
   @override
+  Future<({bool success, Failure? failure})> createCashier({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    // En preview solo simula que el cajero se creó; en Supabase
+    // la Edge Function envía un email y crea una cuenta de Auth.
+    return (success: true, failure: null);
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
