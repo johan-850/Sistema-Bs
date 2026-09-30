@@ -575,8 +575,11 @@ class PreviewUserRepository implements UserRepository {
     required String email,
     required String password,
   }) async {
-    // En preview solo simula que el cajero se creó; en Supabase
-    // la Edge Function envía un email y crea una cuenta de Auth.
+    // Solo vive en memoria: se pierde al recargar la página.
+    _cashiers.insert(
+      0,
+      Cashier(id: 'u-caj-${_cashiers.length + 1}', email: email, name: name, isActive: true, createdAt: DateTime.now()),
+    );
     return (success: true, failure: null);
   }
 
